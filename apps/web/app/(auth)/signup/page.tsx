@@ -15,6 +15,7 @@ export default function SignUp() {
   const [isLoading, setIsLoading] = React.useState(false)
   const [errorMessage, setErrorMessage] = React.useState("")
   const [successMessage, setSuccessMessage] = React.useState("")
+  const [role, setRole] = React.useState<"seeker" | "recruiter" | "admin">("seeker")
 
   const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault()
@@ -41,11 +42,12 @@ export default function SignUp() {
     try {
       setIsLoading(true)
 
-      const { data, error } = await authClient.signUp.email({
+      const { data, error } = await (authClient.signUp.email as any)({
         name: fullName,
         email,
         password,
         callbackURL: "/",
+        role,
       })
 
       if (error) {
@@ -255,6 +257,38 @@ export default function SignUp() {
                     </svg>
                   )}
                 </button>
+              </div>
+            </div>
+
+            {/* Role Selection */}
+            <div>
+              <label
+                className="mb-1.5 block text-[11px] font-semibold uppercase tracking-wider text-gray-300"
+              >
+                I am a
+              </label>
+
+              <div className="flex gap-3">
+                {(["seeker", "recruiter", "admin"] as const).map((r) => (
+                  <label
+                    key={r}
+                    className={`flex items-center gap-2 rounded-full border py-2 px-4 text-xs font-medium transition-all ${
+                      role === r
+                        ? "border-purple-500 text-white bg-purple-500/10"
+                        : "border-white/10 text-gray-400 hover:border-purple-500/30 hover:text-white"
+                    }`}
+                  >
+                    <input
+                      type="radio"
+                      name="role"
+                      value={r}
+                      checked={role === r}
+                      onChange={() => setRole(r)}
+                      className="accent-purple-600"
+                    />
+                    {r.charAt(0).toUpperCase() + r.slice(1)}
+                  </label>
+                ))}
               </div>
             </div>
 
