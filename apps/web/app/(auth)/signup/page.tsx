@@ -145,6 +145,39 @@ export default function SignUp() {
           {/* Form */}
           <form onSubmit={handleSubmit} className="space-y-4">
 
+            {/* Role Selection */}
+            <div>
+              <label
+                className="mb-1.5 block text-[11px] font-semibold uppercase tracking-wider text-gray-300"
+              >
+                I am a
+              </label>
+
+              <div className="grid grid-cols-3 gap-2">
+                <RoleOption
+                  value="admin"
+                  label="Admin"
+                  iconPath="M12 2L2 7l10 5 10-5-10-5zM2 17l10 5 10-5M2 12l10 5 10-5"
+                  checked={role === "admin"}
+                  onChange={setRole}
+                />
+                <RoleOption
+                  value="recruiter"
+                  label="Recruiter"
+                  iconPath="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2M9 7h6v6H9z"
+                  checked={role === "recruiter"}
+                  onChange={setRole}
+                />
+                <RoleOption
+                  value="seeker"
+                  label="Seeker"
+                  iconPath="M22 7L10 13L2 7"
+                  checked={role === "seeker"}
+                  onChange={setRole}
+                />
+              </div>
+            </div>
+
             {/* Full Name */}
             <div>
               <label
@@ -299,39 +332,6 @@ export default function SignUp() {
                     </svg>
                   )}
                 </button>
-              </div>
-            </div>
-
-            {/* Role Selection */}
-            <div>
-              <label
-                className="mb-1.5 block text-[11px] font-semibold uppercase tracking-wider text-gray-300"
-              >
-                I am a
-              </label>
-
-              <div className="grid grid-cols-3 gap-2">
-                <RoleOption
-                  value="admin"
-                  label="Admin"
-                  iconPath="M12 2L2 7l10 5 10-5-10-5zM2 17l10 5 10-5M2 12l10 5 10-5"
-                  checked={role === "admin"}
-                  onChange={setRole}
-                />
-                <RoleOption
-                  value="recruiter"
-                  label="Recruiter"
-                  iconPath="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2M9 7h6v6H9z"
-                  checked={role === "recruiter"}
-                  onChange={setRole}
-                />
-                <RoleOption
-                  value="seeker"
-                  label="Seeker"
-                  iconPath="M22 7L10 13L2 7"
-                  checked={role === "seeker"}
-                  onChange={setRole}
-                />
               </div>
             </div>
 
