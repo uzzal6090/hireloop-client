@@ -8,6 +8,48 @@ import { useRouter } from "next/navigation"
 import logoImage from "@/app/assest/logo.png"
 import { authClient } from "@/lib/auth-client"
 
+const RoleOption = ({ value, label, iconPath, checked, onChange }: {
+  value: "admin" | "recruiter" | "seeker"
+  label: string
+  iconPath: string
+  checked: boolean
+  onChange: (v: "admin" | "recruiter" | "seeker") => void
+}) => (
+  <label
+    className={`flex flex-col items-center justify-center gap-1.5 rounded-xl border py-3 px-2 text-xs font-medium transition-all ${
+      checked
+        ? "border-purple-500 bg-purple-500/10 text-white"
+        : "border-white/10 text-gray-400 hover:border-purple-500/30 hover:text-white"
+    }`}
+  >
+    <input
+      type="radio"
+      name="role"
+      value={value}
+      checked={checked}
+      onChange={() => onChange(value)}
+      className="hidden accent-purple-600"
+    />
+    <div className="flex flex-col items-center justify-center gap-1">
+      <svg
+        xmlns="http://www.w3.org/2000/svg"
+        width="20"
+        height="20"
+        viewBox="0 0 24 24"
+        fill="none"
+        stroke="currentColor"
+        strokeWidth="2"
+        strokeLinecap="round"
+        strokeLinejoin="round"
+        className="w-5 h-5"
+      >
+        <path d={iconPath}></path>
+      </svg>
+      <span className="font-medium">{label}</span>
+    </div>
+  </label>
+)
+
 export default function SignUp() {
   const router = useRouter()
 
@@ -15,7 +57,7 @@ export default function SignUp() {
   const [isLoading, setIsLoading] = React.useState(false)
   const [errorMessage, setErrorMessage] = React.useState("")
   const [successMessage, setSuccessMessage] = React.useState("")
-  const [role, setRole] = React.useState<"seeker" | "recruiter" | "admin">("seeker")
+  const [role, setRole] = React.useState<"admin" | "recruiter" | "seeker">("seeker")
 
   const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault()
@@ -268,27 +310,28 @@ export default function SignUp() {
                 I am a
               </label>
 
-              <div className="flex gap-3">
-                {(["seeker", "recruiter", "admin"] as const).map((r) => (
-                  <label
-                    key={r}
-                    className={`flex items-center gap-2 rounded-full border py-2 px-4 text-xs font-medium transition-all ${
-                      role === r
-                        ? "border-purple-500 text-white bg-purple-500/10"
-                        : "border-white/10 text-gray-400 hover:border-purple-500/30 hover:text-white"
-                    }`}
-                  >
-                    <input
-                      type="radio"
-                      name="role"
-                      value={r}
-                      checked={role === r}
-                      onChange={() => setRole(r)}
-                      className="accent-purple-600"
-                    />
-                    {r.charAt(0).toUpperCase() + r.slice(1)}
-                  </label>
-                ))}
+              <div className="grid grid-cols-3 gap-2">
+                <RoleOption
+                  value="admin"
+                  label="Admin"
+                  iconPath="M12 2L2 7l10 5 10-5-10-5zM2 17l10 5 10-5M2 12l10 5 10-5"
+                  checked={role === "admin"}
+                  onChange={setRole}
+                />
+                <RoleOption
+                  value="recruiter"
+                  label="Recruiter"
+                  iconPath="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2M9 7h6v6H9z"
+                  checked={role === "recruiter"}
+                  onChange={setRole}
+                />
+                <RoleOption
+                  value="seeker"
+                  label="Seeker"
+                  iconPath="M22 7L10 13L2 7"
+                  checked={role === "seeker"}
+                  onChange={setRole}
+                />
               </div>
             </div>
 
