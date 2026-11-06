@@ -16,8 +16,8 @@ export function Navbar() {
   const [isOpen, setIsOpen] = React.useState(false)
 
   return (
-    <nav className="fixed top-0 left-0 right-0 z-50 border-b border-white/10">
-      <div className="relative h-16 px-4 lg:px-8">
+    <nav className="fixed top-0 left-0 right-0 z-50 border-b border-white/10 bg-[#0a0a0a]/80 backdrop-blur supports-[backdrop-filter]:bg-[#0a0a0a]/60">
+      <div className="relative h-20 px-4 lg:px-8">
         <div
           className="absolute inset-0"
           style={{
@@ -27,13 +27,13 @@ export function Navbar() {
         />
         <div className="relative flex h-full items-center justify-between">
           <div className="flex items-center gap-2 lg:gap-3">
-            <Link href="/">
+            <Link href="/" className="flex items-center">
               <Image
                 src={logoImage}
                 alt="hireloop logo"
-                width={160}
-                height={60}
-                className="h-10 w-auto lg:h-12 lg:w-auto"
+                width={40}
+                height={40}
+                className="h-9 w-auto lg:h-11 lg:w-auto"
               />
             </Link>
           </div>
@@ -48,9 +48,9 @@ export function Navbar() {
                 {link.label}
               </Link>
             ))}
-            <div className="w-px h-5 bg-gray-600 mx-2" />
+            <div className="w-px h-5 bg-gray-700 mx-2" />
             <Link
-              href="/sign-in"
+              href="/signin"
               className="text-sm font-medium text-gray-300 transition-colors hover:text-white"
             >
               Sign In
@@ -108,7 +108,7 @@ export function Navbar() {
       </div>
 
       {isOpen && (
-        <div className="lg:hidden border-t border-white/10 bg-[#1a1a1a]">
+        <div className="lg:hidden border-t border-white/10 bg-[#0a0a0a]">
           <div className="px-4 py-4 space-y-2">
             {navbarLinks.map((link) => (
               <Link
@@ -120,9 +120,9 @@ export function Navbar() {
                 {link.label}
               </Link>
             ))}
-            <div className="w-px h-4 bg-gray-600 mx-4" />
+            <div className="w-px h-4 bg-gray-700 mx-4" />
             <Link
-              href="/sign-in"
+              href="/signin"
               onClick={() => setIsOpen(false)}
               className="block px-3 py-2 rounded-lg text-sm font-medium text-gray-300 hover:bg-white/10 hover:text-white transition-colors"
             >
