@@ -88,12 +88,6 @@ const navByRole: Record<UserRole, NavItem[]> = {
   admin:     adminNav,
 }
 
-const roleBadgeStyle: Record<UserRole, string> = {
-  seeker:    "bg-indigo-500/20 text-indigo-300 border-indigo-500/30",
-  recruiter: "bg-purple-500/20 text-purple-300 border-purple-500/30",
-  admin:     "bg-pink-500/20 text-pink-300 border-pink-500/30",
-}
-
 export function DashboardSidebar() {
   const { data: session, isPending } = useSession()
   const pathname = usePathname()
@@ -123,21 +117,21 @@ export function DashboardSidebar() {
           width={36}
           height={36}
           unoptimized
-          className="h-9 w-9 rounded-full object-cover ring-2 ring-white/10"
+          className="h-9 w-9 rounded-full object-cover ring-2 ring-sidebar-border"
         />
       )
     }
     return (
-      <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-gradient-to-br from-indigo-600 to-purple-600 text-sm font-semibold text-white ring-2 ring-white/10">
+      <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-sidebar-accent text-sidebar-accent-foreground text-sm font-semibold ring-2 ring-sidebar-border">
         {user.name?.charAt(0).toUpperCase() ?? "U"}
       </div>
     )
   }
 
   return (
-    <Sidebar className="border-r border-white/10 bg-[#111111]">
+    <Sidebar className="border-r border-sidebar-border bg-sidebar">
       {/* ── Header ── */}
-      <SidebarHeader className="px-4 py-4 border-b border-white/10">
+      <SidebarHeader className="px-4 py-4 border-b border-sidebar-border">
         <Link href="/" className="flex items-center gap-2.5">
           <Image
             src={logoImage}
@@ -147,7 +141,7 @@ export function DashboardSidebar() {
             className="h-8 w-auto object-contain"
             priority
           />
-          <span className="text-base font-bold tracking-tight text-white">
+          <span className="text-base font-bold tracking-tight text-sidebar-foreground">
             HireLoop
           </span>
         </Link>
@@ -156,7 +150,7 @@ export function DashboardSidebar() {
       {/* ── Main Nav ── */}
       <SidebarContent className="px-3 py-3">
         <SidebarGroup>
-          <SidebarGroupLabel className="mb-1 px-2 text-[10px] font-semibold uppercase tracking-widest text-gray-500">
+          <SidebarGroupLabel className="mb-1 px-2 text-[10px] font-semibold uppercase tracking-widest text-sidebar-foreground/70">
             {role === "admin" ? "Admin Panel" : role === "recruiter" ? "Recruiter" : "Job Seeker"}
           </SidebarGroupLabel>
           <SidebarMenu className="space-y-0.5">
@@ -166,22 +160,23 @@ export function DashboardSidebar() {
                 <SidebarMenuItem key={item.href}>
                   <SidebarMenuButton
                     render={<Link href={item.href} />}
+                    isActive={isActive}
                     className={cn(
                       "flex w-full items-center gap-3 rounded-lg px-3 py-2.5 text-sm font-medium transition-all",
-                      isActive
-                        ? "bg-white/10 text-white"
-                        : "text-gray-400 hover:bg-white/5 hover:text-white"
+                      !isActive && "text-sidebar-foreground/70 hover:bg-sidebar-accent hover:text-sidebar-accent-foreground"
                     )}
                   >
                     <item.icon
                       className={cn(
                         "h-4 w-4 shrink-0",
-                        isActive ? "text-purple-400" : "text-gray-500"
+                        isActive ? "text-sidebar-accent-foreground" : "text-sidebar-foreground/60"
                       )}
                     />
-                    <span>{item.label}</span>
+                    <span className={isActive ? "text-sidebar-foreground" : "text-sidebar-foreground/70"}>
+                      {item.label}
+                    </span>
                     {isActive && (
-                      <ChevronRight className="ml-auto h-3 w-3 text-purple-400" />
+                      <ChevronRight className="ml-auto h-3 w-3 text-sidebar-accent-foreground" />
                     )}
                   </SidebarMenuButton>
                 </SidebarMenuItem>
@@ -190,11 +185,11 @@ export function DashboardSidebar() {
           </SidebarMenu>
         </SidebarGroup>
 
-        <SidebarSeparator className="my-3 bg-white/10" />
+        <SidebarSeparator className="my-3" />
 
         {/* Public nav links */}
         <SidebarGroup>
-          <SidebarGroupLabel className="mb-1 px-2 text-[10px] font-semibold uppercase tracking-widest text-gray-500">
+          <SidebarGroupLabel className="mb-1 px-2 text-[10px] font-semibold uppercase tracking-widest text-sidebar-foreground/70">
             Explore
           </SidebarGroupLabel>
           <SidebarMenu className="space-y-0.5">
@@ -202,10 +197,10 @@ export function DashboardSidebar() {
               <SidebarMenuItem key={item.href}>
                 <SidebarMenuButton
                   render={<Link href={item.href} />}
-                  className="flex w-full items-center gap-3 rounded-lg px-3 py-2 text-sm font-medium text-gray-500 transition-all hover:bg-white/5 hover:text-gray-300"
+                  className="flex w-full items-center gap-3 rounded-lg px-3 py-2 text-sm font-medium text-sidebar-foreground/60 hover:bg-sidebar-accent hover:text-sidebar-accent-foreground transition-colors"
                 >
-                  <item.icon className="h-4 w-4 shrink-0 text-gray-600" />
-                  <span>{item.label}</span>
+                  <item.icon className="h-4 w-4 shrink-0 text-sidebar-foreground/50" />
+                  <span className="text-sidebar-foreground/70">{item.label}</span>
                 </SidebarMenuButton>
               </SidebarMenuItem>
             ))}
@@ -214,13 +209,13 @@ export function DashboardSidebar() {
       </SidebarContent>
 
       {/* ── Footer / User Info ── */}
-      <SidebarFooter className="border-t border-white/10 px-4 py-4">
+      <SidebarFooter className="border-t border-sidebar-border px-4 py-4">
         {isPending ? (
           <div className="flex items-center gap-3">
-            <div className="h-9 w-9 rounded-full bg-white/10 animate-pulse" />
+            <div className="h-9 w-9 rounded-full bg-sidebar-accent animate-pulse" />
             <div className="flex-1 space-y-1.5">
-              <div className="h-3 w-24 rounded bg-white/10 animate-pulse" />
-              <div className="h-2.5 w-32 rounded bg-white/10 animate-pulse" />
+              <div className="h-3 w-24 rounded bg-sidebar-accent animate-pulse" />
+              <div className="h-2.5 w-32 rounded bg-sidebar-accent animate-pulse" />
             </div>
           </div>
         ) : user ? (
@@ -229,27 +224,24 @@ export function DashboardSidebar() {
             <div className="flex items-center gap-3">
               {renderAvatar()}
               <div className="flex-1 min-w-0">
-                <p className="truncate text-sm font-semibold text-white leading-tight">
+                <p className="truncate text-sm font-semibold text-sidebar-foreground leading-tight">
                   {user.name}
                 </p>
-                <p className="truncate text-[11px] text-gray-500 leading-none mt-0.5">
+                <p className="truncate text-[11px] text-sidebar-foreground/50 leading-none mt-0.5">
                   {user.email}
                 </p>
               </div>
             </div>
             {/* Role badge */}
             <span
-              className={cn(
-                "inline-flex items-center rounded-full border px-2.5 py-0.5 text-[10px] font-semibold uppercase tracking-wider",
-                roleBadgeStyle[role]
-              )}
+              className="inline-flex items-center rounded-full border border-sidebar-accent bg-sidebar-accent/10 px-2.5 py-0.5 text-[10px] font-semibold uppercase tracking-wider text-sidebar-accent-foreground"
             >
               {role}
             </span>
             {/* Sign out */}
             <button
               onClick={handleSignOut}
-              className="flex w-full items-center gap-2.5 rounded-lg px-3 py-2 text-sm font-medium text-gray-400 transition-colors hover:bg-red-500/10 hover:text-red-400"
+              className="flex w-full items-center gap-2.5 rounded-lg px-3 py-2 text-sm font-medium text-sidebar-foreground/70 transition-colors hover:bg-sidebar-accent hover:text-sidebar-accent-foreground"
             >
               <LogOut className="h-4 w-4 shrink-0" />
               <span>Sign Out</span>
