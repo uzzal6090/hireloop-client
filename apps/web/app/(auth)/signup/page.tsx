@@ -7,6 +7,7 @@ import Image from "next/image"
 import { useRouter } from "next/navigation"
 import logoImage from "@/app/assest/logo.png"
 import { authClient } from "@/lib/auth-client"
+import { X } from "lucide-react"
 
 const RoleOption = ({ value, label, iconPath, checked, onChange }: {
   value: "admin" | "recruiter" | "seeker"
@@ -50,6 +51,15 @@ const RoleOption = ({ value, label, iconPath, checked, onChange }: {
   </label>
 )
 
+const isValidImageUrl = (url: string): boolean => {
+  try {
+    const parsed = new URL(url)
+    return parsed.protocol === "http:" || parsed.protocol === "https:"
+  } catch {
+    return false
+  }
+}
+
 export default function SignUp() {
   const router = useRouter()
 
@@ -58,6 +68,31 @@ export default function SignUp() {
   const [errorMessage, setErrorMessage] = React.useState("")
   const [successMessage, setSuccessMessage] = React.useState("")
   const [role, setRole] = React.useState<"admin" | "recruiter" | "seeker">("seeker")
+  const [imageUrl, setImageUrl] = React.useState("")
+  const [imagePreview, setImagePreview] = React.useState<string | null>(null)
+  const [imageError, setImageError] = React.useState("")
+
+  const handleImageUrlChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    setImageError("")
+    const url = e.target.value.trim()
+    setImageUrl(url)
+    if (url) {
+      if (isValidImageUrl(url)) {
+        setImagePreview(url)
+      } else {
+        setImagePreview(null)
+        setImageError("Please enter a valid HTTP or HTTPS URL.")
+      }
+    } else {
+      setImagePreview(null)
+    }
+  }
+
+  const removeImage = () => {
+    setImageError("")
+    setImageUrl("")
+    setImagePreview(null)
+  }
 
   const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault()
@@ -81,6 +116,16 @@ export default function SignUp() {
       return
     }
 
+    let profileImage: string | undefined
+
+    if (imageUrl) {
+      if (!isValidImageUrl(imageUrl)) {
+        setErrorMessage("Please enter a valid HTTP or HTTPS image URL.")
+        return
+      }
+      profileImage = imageUrl
+    }
+
     try {
       setIsLoading(true)
 
@@ -88,6 +133,7 @@ export default function SignUp() {
         name: fullName,
         email,
         password,
+        image: profileImage,
         callbackURL: "/",
         role,
       })
@@ -110,6 +156,12 @@ export default function SignUp() {
       setIsLoading(false)
     }
   }
+
+  React.useEffect(() => {
+    return () => {
+      // No blob URLs to revoke; imagePreview stores a direct URL string
+    }
+  }, [])
 
   return (
     <main className="flex min-h-svh items-center justify-center bg-[#0a0a0a] px-4 pt-20 pb-12 sm:pt-24 sm:pb-16">
@@ -332,6 +384,77 @@ export default function SignUp() {
                     </svg>
                   )}
                 </button>
+              </div>
+            </div>
+
+            {/* Profile Image URL */}
+            <div>
+              <label
+                htmlFor="profileImageUrl"
+                className="mb-1.5 block text-[11px] font-semibold uppercase tracking-wider text-gray-300"
+              >
+                Profile Image URL
+              </label>
+
+              <div className="space-y-3">
+                {/* Image Preview */}
+                {imagePreview && (
+                  <div className="relative inline-block">
+                    <img
+                      src={imagePreview}
+                      alt="Profile preview"
+                      className="w-24 h-24 rounded-full object-cover border border-white/10 bg-[#0a0a0a]/60"
+                      onError={(e) => {
+                        const target = e.target as HTMLImageElement
+                        target.onerror = null
+                        setImageError("Unable to load image preview. Please check the URL.")
+                        setImagePreview(null)
+                      }}
+                    />
+                    <button
+                      type="button"
+                      onClick={removeImage}
+                      aria-label="Remove image"
+                      className="absolute -top-2 -right-2 w-6 h-6 rounded-full bg-red-500/90 text-white text-xs flex items-center justify-center hover:bg-red-500 transition-colors"
+                    >
+                      <X size={12} strokeWidth={2} />
+                    </button>
+                  </div>
+                )}
+
+                {/* URL Input */}
+                <div className="relative">
+                  <svg
+                    xmlns="http://www.w3.org/2000/svg"
+                    width="16"
+                    height="16"
+                    viewBox="0 0 24 24"
+                    fill="none"
+                    stroke="currentColor"
+                    strokeWidth="1.5"
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                    className="absolute left-3.5 top-1/2 -translate-y-1/2 text-gray-500"
+                  >
+                    <path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z" />
+                  </svg>
+
+                  <input
+                    id="profileImageUrl"
+                    type="url"
+                    autoComplete="off"
+                    placeholder="https://example.com/profile.jpg"
+                    value={imageUrl}
+                    onChange={handleImageUrlChange}
+                    className="w-full rounded-full border border-white/10 bg-[#0a0a0a]/60 py-3 pl-10 pr-4 text-sm text-white outline-none transition-all placeholder:text-gray-600 focus:border-purple-500 focus:ring-2 focus:ring-purple-500/20"
+                  />
+                </div>
+
+                {imageError && (
+                  <p role="alert" className="text-center text-xs text-red-400">
+                    {imageError}
+                  </p>
+                )}
               </div>
             </div>
 
