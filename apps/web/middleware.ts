@@ -37,6 +37,8 @@ export async function middleware(request: Request) {
   return NextResponse.next()
 }
 
+export const runtime = "nodejs"
+
 export const config = {
   matcher: ["/dashboard/:path*"],
 }
