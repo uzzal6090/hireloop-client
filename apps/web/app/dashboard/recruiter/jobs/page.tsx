@@ -227,8 +227,8 @@ export default function ManageJobsPage() {
       </div>
 
       {/* Jobs table */}
-      <div className="rounded-xl border border-white/10 bg-white/5 overflow-hidden">
-        <table className="w-full text-left border-collapse">
+      <div className="rounded-xl border border-white/10 bg-white/5 overflow-x-auto">
+        <table className="min-w-full text-left border-collapse">
           <thead>
             <tr className="border-b border-white/10 bg-white/5">
               <th className="px-5 py-3 font-semibold uppercase tracking-widest text-[11px] text-gray-500">

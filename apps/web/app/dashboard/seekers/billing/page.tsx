@@ -120,33 +120,45 @@ export default function SeekerBillingPage() {
       {/* Payment history */}
       <div>
         <h2 className="text-base font-semibold text-white mb-4">Payment History</h2>
-        <div className="rounded-xl border border-white/10 bg-white/5 overflow-hidden">
-          <div className="hidden md:grid md:grid-cols-[1fr_auto_auto_auto_auto] items-center gap-4 px-5 py-3 border-b border-white/10 bg-white/5">
-            <span className="text-[11px] font-semibold uppercase tracking-widest text-gray-500">Transaction ID</span>
-            <span className="text-[11px] font-semibold uppercase tracking-widest text-gray-500 w-28">Date</span>
-            <span className="text-[11px] font-semibold uppercase tracking-widest text-gray-500 w-20">Plan</span>
-            <span className="text-[11px] font-semibold uppercase tracking-widest text-gray-500 w-20">Amount</span>
-            <span className="text-[11px] font-semibold uppercase tracking-widest text-gray-500 w-20 text-right">Status</span>
-          </div>
-          <div className="divide-y divide-white/10">
-            {paymentHistory.map(tx => (
-              <div key={tx.id} className="flex flex-col md:grid md:grid-cols-[1fr_auto_auto_auto_auto] items-start md:items-center gap-2 md:gap-4 px-5 py-4 hover:bg-white/5 transition-colors">
-                <div className="flex items-center gap-2">
-                  <Hash className="h-3.5 w-3.5 text-gray-600" />
-                  <span className="font-mono text-xs text-gray-400">{tx.id}</span>
-                </div>
-                <div className="flex items-center gap-1 text-xs text-gray-400 w-28">
-                  <Calendar className="h-3 w-3 shrink-0" />
-                  {tx.date}
-                </div>
-                <StatusBadge status={tx.plan} />
-                <span className="text-sm font-semibold text-white w-20">{tx.amount}</span>
-                <div className="w-20 flex justify-end">
-                  <StatusBadge status={tx.status === "Paid" ? "offered" : "free"} />
-                </div>
-              </div>
-            ))}
-          </div>
+        <div className="rounded-xl border border-white/10 bg-white/5 overflow-x-auto">
+          <table className="min-w-full text-left border-collapse">
+            <thead>
+              <tr className="border-b border-white/10 bg-white/5">
+                <th className="px-5 py-3 font-semibold uppercase tracking-widest text-[11px] text-gray-500">Transaction ID</th>
+                <th className="px-5 py-3 text-center font-semibold uppercase tracking-widest text-[11px] text-gray-500 w-28">Date</th>
+                <th className="px-5 py-3 text-center font-semibold uppercase tracking-widest text-[11px] text-gray-500 w-20">Plan</th>
+                <th className="px-5 py-3 text-center font-semibold uppercase tracking-widest text-[11px] text-gray-500 w-20">Amount</th>
+                <th className="px-5 py-3 text-right font-semibold uppercase tracking-widest text-[11px] text-gray-500 w-20">Status</th>
+              </tr>
+            </thead>
+            <tbody className="divide-y divide-white/10">
+              {paymentHistory.map(tx => (
+                <tr key={tx.id} className="hover:bg-white/5 transition-colors border-b border-white/10 last:border-0">
+                  <td className="px-5 py-4 text-left min-w-0">
+                    <div className="flex items-center gap-2">
+                      <Hash className="h-3.5 w-3.5 text-gray-600" />
+                      <span className="font-mono text-xs text-gray-400 truncate">{tx.id}</span>
+                    </div>
+                  </td>
+                  <td className="px-5 py-4 text-center w-28 whitespace-nowrap overflow-hidden text-ellipsis">
+                    <div className="flex items-center gap-1 text-xs text-gray-400">
+                      <Calendar className="h-3 w-3 shrink-0" />
+                      {tx.date}
+                    </div>
+                  </td>
+                  <td className="px-5 py-4 text-center w-20 whitespace-nowrap overflow-hidden text-ellipsis">
+                    <StatusBadge status={tx.plan} />
+                  </td>
+                  <td className="px-5 py-4 text-center w-20 whitespace-nowrap overflow-hidden text-ellipsis">
+                    <span className="text-sm font-semibold text-white">{tx.amount}</span>
+                  </td>
+                  <td className="px-5 py-4 text-right w-20 whitespace-nowrap overflow-hidden text-ellipsis">
+                    <StatusBadge status={tx.status === "Paid" ? "offered" : "free"} />
+                  </td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
         </div>
       </div>
     </div>

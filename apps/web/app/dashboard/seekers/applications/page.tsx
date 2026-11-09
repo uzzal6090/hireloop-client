@@ -62,50 +62,48 @@ export default function MyApplicationsPage() {
       </div>
 
       {/* Table */}
-      <div className="rounded-xl border border-white/10 bg-white/5 overflow-hidden">
-        {/* Header */}
-        <div className="hidden md:grid md:grid-cols-[1fr_auto_auto_auto] items-center gap-4 px-5 py-3 border-b border-white/10 bg-white/5">
-          <span className="text-[11px] font-semibold uppercase tracking-widest text-gray-500">Job & Company</span>
-          <span className="text-[11px] font-semibold uppercase tracking-widest text-gray-500 w-32">Date Applied</span>
-          <span className="text-[11px] font-semibold uppercase tracking-widest text-gray-500 w-32">Status</span>
-          <span className="text-[11px] font-semibold uppercase tracking-widest text-gray-500 w-24 text-right">Action</span>
-        </div>
-
-        {/* Rows */}
-        <div className="divide-y divide-white/10">
-          {filtered.map(app => (
-            <div key={app.id} className="flex flex-col md:grid md:grid-cols-[1fr_auto_auto_auto] items-start md:items-center gap-3 md:gap-4 px-5 py-4 hover:bg-white/5 transition-colors">
-              {/* Job info */}
-              <div className="flex items-center gap-3 min-w-0">
-                <div className={`h-9 w-9 shrink-0 rounded-lg bg-gradient-to-br ${app.logoColor} flex items-center justify-center text-xs font-bold text-white`}>
-                  {app.logo}
-                </div>
-                <div className="min-w-0">
-                  <p className="text-sm font-semibold text-white leading-tight truncate">{app.jobTitle}</p>
-                  <p className="text-xs text-gray-400">{app.company}</p>
-                </div>
-              </div>
-
-              {/* Date */}
-              <div className="w-32">
-                <p className="text-xs font-medium text-white">{app.dateApplied}</p>
-                <p className="text-[11px] text-gray-500">{app.timeAgo}</p>
-              </div>
-
-              {/* Status */}
-              <div className="w-32">
-                <StatusBadge status={app.status} />
-              </div>
-
-              {/* Action */}
-              <div className="w-24 flex justify-end">
-                <button className="flex items-center gap-1 rounded-lg border border-white/10 px-3 py-1.5 text-xs font-medium text-gray-400 hover:bg-white/10 hover:text-white transition-all">
-                  View <ExternalLink className="h-3 w-3" />
-                </button>
-              </div>
-            </div>
-          ))}
-        </div>
+      <div className="rounded-xl border border-white/10 bg-white/5 overflow-x-auto">
+        <table className="min-w-full text-left border-collapse">
+          <thead>
+            <tr className="border-b border-white/10 bg-white/5">
+              <th className="px-5 py-3 font-semibold uppercase tracking-widest text-[11px] text-gray-500">Job & Company</th>
+              <th className="px-5 py-3 text-center font-semibold uppercase tracking-widest text-[11px] text-gray-500 w-32">Date Applied</th>
+              <th className="px-5 py-3 text-center font-semibold uppercase tracking-widest text-[11px] text-gray-500 w-32">Status</th>
+              <th className="px-5 py-3 text-right font-semibold uppercase tracking-widest text-[11px] text-gray-500 w-24">Action</th>
+            </tr>
+          </thead>
+          <tbody className="divide-y divide-white/10">
+            {filtered.map(app => (
+              <tr key={app.id} className="hover:bg-white/5 transition-colors border-b border-white/10 last:border-0">
+                <td className="px-5 py-4 text-left min-w-0">
+                  <div className="flex items-center gap-3">
+                    <div className={`h-9 w-9 shrink-0 rounded-lg bg-gradient-to-br ${app.logoColor} flex items-center justify-center text-xs font-bold text-white`}>
+                      {app.logo}
+                    </div>
+                    <div className="min-w-0">
+                      <p className="text-sm font-semibold text-white leading-tight truncate">{app.jobTitle}</p>
+                      <p className="text-xs text-gray-400">{app.company}</p>
+                    </div>
+                  </div>
+                </td>
+                <td className="px-5 py-4 text-center w-32 whitespace-nowrap overflow-hidden text-ellipsis">
+                  <div className="flex flex-col items-center gap-1">
+                    <p className="text-xs font-medium text-white">{app.dateApplied}</p>
+                    <p className="text-[11px] text-gray-500">{app.timeAgo}</p>
+                  </div>
+                </td>
+                <td className="px-5 py-4 text-center w-32">
+                  <StatusBadge status={app.status} />
+                </td>
+                <td className="px-5 py-4 text-right w-24">
+                  <button className="flex items-center gap-1 rounded-lg border border-white/10 px-3 py-1.5 text-xs font-medium text-gray-400 hover:bg-white/10 hover:text-white transition-all">
+                    View <ExternalLink className="h-3 w-3" />
+                  </button>
+                </td>
+              </tr>
+            ))}
+          </tbody>
+        </table>
 
         {filtered.length === 0 && (
           <div className="p-12 text-center">

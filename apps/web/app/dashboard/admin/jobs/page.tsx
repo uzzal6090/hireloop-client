@@ -125,63 +125,64 @@ export default function ManageJobsPage() {
       </div>
 
       {/* Jobs Table */}
-      <div className="rounded-xl border border-white/10 bg-white/5 overflow-hidden">
-        <div className="hidden md:grid md:grid-cols-[2fr_auto_auto_auto_auto_auto] items-center gap-4 px-5 py-3 border-b border-white/10 bg-white/5">
-          <span className="text-[11px] font-semibold uppercase tracking-widest text-gray-500">Job Title</span>
-          <span className="text-[11px] font-semibold uppercase tracking-widest text-gray-500">Company</span>
-          <span className="text-[11px] font-semibold uppercase tracking-widest text-gray-500 text-center w-28">Category</span>
-          <span className="text-[11px] font-semibold uppercase tracking-widest text-gray-500 text-center w-20">Type</span>
-          <span className="text-[11px] font-semibold uppercase tracking-widest text-gray-500 text-center w-20">Posted</span>
-          <span className="text-[11px] font-semibold uppercase tracking-widest text-gray-500 w-32 text-right">Status</span>
-          <span className="text-[11px] font-semibold uppercase tracking-widest text-gray-500 w-40 text-right">Actions</span>
-        </div>
+      <div className="rounded-xl border border-white/10 bg-white/5 overflow-x-auto">
+        <table className="min-w-full text-left border-collapse">
+          <thead>
+            <tr className="border-b border-white/10 bg-white/5">
+              <th className="px-5 py-3 font-semibold uppercase tracking-widest text-[11px] text-gray-500">Job Title</th>
+              <th className="px-5 py-3 text-center font-semibold uppercase tracking-widest text-[11px] text-gray-500 w-28">Category</th>
+              <th className="px-5 py-3 text-center font-semibold uppercase tracking-widest text-[11px] text-gray-500 w-20">Type</th>
+              <th className="px-5 py-3 text-center font-semibold uppercase tracking-widest text-[11px] text-gray-500 w-20">Posted</th>
+              <th className="px-5 py-3 text-center font-semibold uppercase tracking-widest text-[11px] text-gray-500 w-32">Status</th>
+              <th className="px-5 py-3 text-right font-semibold uppercase tracking-widest text-[11px] text-gray-500 w-40">Actions</th>
+            </tr>
+          </thead>
+          <tbody className="divide-y divide-white/10">
+            {filteredJobs.map(job => (
+              <tr key={job.id} className="hover:bg-white/5 transition-colors border-b border-white/10 last:border-0">
+                <td className="px-5 py-4 text-left min-w-0">
+                  <p className="text-sm font-semibold text-white leading-tight truncate">{job.title}</p>
+                  <p className="text-xs text-gray-400">{job.company}</p>
+                </td>
+                <td className="px-5 py-4 text-center w-28 whitespace-nowrap overflow-hidden text-ellipsis">
+                  <span className="text-xs text-gray-400">{categoryLabels[job.category]}</span>
+                </td>
+                <td className="px-5 py-4 text-center w-20 whitespace-nowrap overflow-hidden text-ellipsis">
+                  <span className="text-xs text-gray-400">{job.type}</span>
+                </td>
+                <td className="px-5 py-4 text-center w-20 whitespace-nowrap overflow-hidden text-ellipsis">
+                  <span className="text-xs text-gray-400">{job.datePosted}</span>
+                </td>
+                <td className="px-5 py-4 text-center w-32 whitespace-nowrap overflow-hidden text-ellipsis">
+                  <StatusBadge status={job.status} />
+                </td>
+                <td className="px-5 py-4 text-right w-40 whitespace-nowrap">
+                  <div className="flex items-center gap-2">
+                    <Link href={`/jobs/${job.id}`}>
+                      <button className="flex items-center gap-1.5 rounded-lg border border-white/10 px-3 py-2 text-xs font-medium text-gray-400 hover:bg-white/10 hover:text-white transition-all whitespace-nowrap">
+                        <ChevronRight className="h-3 w-3" /> View
+                      </button>
+                    </Link>
+                    <button
+                      onClick={() => handleDelete(job.id)}
+                      className="rounded-lg border border-white/10 p-2 text-gray-500 hover:border-red-500/40 hover:bg-red-500/10 hover:text-red-400 transition-all"
+                    >
+                      <XCircle className="h-3.5 w-3.5" />
+                    </button>
+                  </div>
+                </td>
+              </tr>
+            ))}
+          </tbody>
+        </table>
 
-        <div className="divide-y divide-white/10">
-          {filteredJobs.map(job => (
-            <div
-              key={job.id}
-              className="flex flex-col md:grid md:grid-cols-[2fr_auto_auto_auto_auto_auto] items-start md:items-center gap-3 md:gap-4 px-5 py-4 hover:bg-white/5 transition-colors"
-            >
-              <div className="min-w-0">
-                <p className="text-sm font-semibold text-white leading-tight truncate">{job.title}</p>
-                <p className="text-xs text-gray-400">{job.company}</p>
-              </div>
-              <div className="w-28">
-                <span className="text-xs text-gray-400">{categoryLabels[job.category]}</span>
-              </div>
-              <div className="w-20 text-center">
-                <span className="text-xs text-gray-400">{job.type}</span>
-              </div>
-              <div className="w-20 text-center">
-                <span className="text-xs text-gray-400">{job.datePosted}</span>
-              </div>
-              <div className="w-32">
-                <StatusBadge status={job.status} />
-              </div>
-              <div className="w-40 flex flex-col sm:flex-row gap-2 justify-end">
-                <Link href={`/jobs/${job.id}`}>
-                  <button className="flex items-center gap-1.5 rounded-lg border border-white/10 px-3 py-2 text-xs font-medium text-gray-400 hover:bg-white/10 hover:text-white transition-all">
-                    <ChevronRight className="h-3 w-3" /> View
-                  </button>
-                </Link>
-                <button
-                  onClick={() => handleDelete(job.id)}
-                  className="rounded-lg border border-white/10 p-2 text-gray-500 hover:border-red-500/40 hover:bg-red-500/10 hover:text-red-400 transition-all"
-                >
-                  <XCircle className="h-3.5 w-3.5" />
-                </button>
-              </div>
-            </div>
-          ))}
-
-          {filteredJobs.length === 0 && (
-            <div className="p-12 text-center">
-              <Briefcase className="mx-auto h-10 w-10 text-gray-600 mb-3" />
-              <p className="text-gray-400 font-medium">No jobs found</p>
-              <p className="text-xs text-gray-600 mt-1">Try adjusting your search or filters</p>
-            </div>
-          )}
-        </div>
+        {filteredJobs.length === 0 && (
+          <div className="p-12 text-center">
+            <Briefcase className="mx-auto h-10 w-10 text-gray-600 mb-3" />
+            <p className="text-gray-400 font-medium">No jobs found</p>
+            <p className="text-xs text-gray-600 mt-1">Try adjusting your search or filters</p>
+          </div>
+        )}
       </div>
 
       {/* Delete confirmation dialog */}

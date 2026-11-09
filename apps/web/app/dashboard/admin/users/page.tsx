@@ -119,69 +119,74 @@ export default function ManageUsersPage() {
       </div>
 
       {/* Users Table */}
-      <div className="rounded-xl border border-white/10 bg-white/5 overflow-hidden">
-        <div className="hidden md:grid md:grid-cols-[1fr_auto_auto_auto_auto_auto] items-center gap-4 px-5 py-3 border-b border-white/10 bg-white/5">
-          <span className="text-[11px] font-semibold uppercase tracking-widest text-gray-500">Name</span>
-          <span className="text-[11px] font-semibold uppercase tracking-widest text-gray-500">Email</span>
-          <span className="text-[11px] font-semibold uppercase tracking-widest text-gray-500 text-center w-24">Role</span>
-          <span className="text-[11px] font-semibold uppercase tracking-widest text-gray-500 text-center w-20">Join Date</span>
-          <span className="text-[11px] font-semibold uppercase tracking-widest text-gray-500 w-32 text-right">Actions</span>
-        </div>
+      <div className="rounded-xl border border-white/10 bg-white/5 overflow-x-auto">
+        <table className="min-w-full text-left border-collapse">
+          <thead>
+            <tr className="border-b border-white/10 bg-white/5">
+              <th className="px-5 py-3 font-semibold uppercase tracking-widest text-[11px] text-gray-500">Name</th>
+              <th className="px-5 py-3 text-center font-semibold uppercase tracking-widest text-[11px] text-gray-500 w-24">Role</th>
+              <th className="px-5 py-3 text-center font-semibold uppercase tracking-widest text-[11px] text-gray-500 w-20">Join Date</th>
+              <th className="px-5 py-3 text-center font-semibold uppercase tracking-widest text-[11px] text-gray-500 w-24">Status</th>
+              <th className="px-5 py-3 text-right font-semibold uppercase tracking-widest text-[11px] text-gray-500 w-40">Actions</th>
+            </tr>
+          </thead>
+          <tbody className="divide-y divide-white/10">
 
-        <div className="divide-y divide-white/10">
           {filteredUsers.map(user => (
-            <div
-              key={user.id}
-              className="flex flex-col md:grid md:grid-cols-[1fr_auto_auto_auto_auto_auto] items-start md:items-center gap-3 md:gap-4 px-5 py-4 hover:bg-white/5 transition-colors"
-            >
-              <div className="flex items-center gap-3 min-w-0">
-                <div className="h-9 w-9 shrink-0 rounded-full bg-gradient-to-br from-indigo-500 to-purple-600 flex items-center justify-center text-xs font-bold text-white">
-                  {user.name.charAt(0)}
+            <tr key={user.id} className="hover:bg-white/5 transition-colors border-b border-white/10 last:border-0">
+              <td className="px-5 py-4 text-left min-w-0">
+                <div className="flex items-center gap-3">
+                  <div className="h-9 w-9 shrink-0 rounded-full bg-gradient-to-br from-indigo-500 to-purple-600 flex items-center justify-center text-xs font-bold text-white">
+                    {user.name.charAt(0)}
+                  </div>
+                  <div className="min-w-0">
+                    <p className="text-sm font-semibold text-white leading-tight truncate">{user.name}</p>
+                    <p className="text-xs text-gray-400 truncate">{user.email}</p>
+                  </div>
                 </div>
-                <div className="min-w-0">
-                  <p className="text-sm font-semibold text-white leading-tight truncate">{user.name}</p>
-                  <p className="text-xs text-gray-400 truncate">{user.email}</p>
-                </div>
-              </div>
-              <div className="w-24">
+              </td>
+              <td className="px-5 py-4 text-center w-24 whitespace-nowrap overflow-hidden text-ellipsis">
                 <span
                   className={`inline-flex items-center rounded-full border px-2.5 py-0.5 text-[10px] font-semibold uppercase tracking-wider ${roleColors[user.role]}`}
+                  style={{ maxWidth: "100%" }}
                 >
                   {roleLabels[user.role]}
                 </span>
-              </div>
-              <div className="w-20 text-center">
+              </td>
+              <td className="px-5 py-4 text-center w-20 whitespace-nowrap overflow-hidden text-ellipsis">
                 <span className="text-xs text-gray-400">{user.joinDate}</span>
-              </div>
-              <div className="w-32 flex justify-end">
+              </td>
+              <td className="px-5 py-4 text-center w-24 whitespace-nowrap overflow-hidden text-ellipsis">
                 <StatusBadge status={user.status} />
-              </div>
-              <div className="w-40 flex flex-col sm:flex-row gap-2 justify-end">
-                {user.role !== "admin" && (
-                  <button
-                    onClick={() => handleRoleChange(user.id, user.role === "seeker" ? "recruiter" : "seeker")}
-                    className="flex items-center gap-1.5 rounded-lg border border-white/10 px-3 py-2 text-xs font-medium text-gray-400 hover:bg-white/10 hover:text-white transition-all"
-                  >
-                    {user.role === "seeker" ? "Make Recruiter" : "Make Seeker"}
-                  </button>
-                )}
-                {user.status === "active" ? (
-                  <button
-                    onClick={() => handleSuspend(user.id, "suspend")}
-                    className="flex items-center gap-1.5 rounded-lg border border-red-500/30 px-3 py-2 text-xs font-medium text-red-400 hover:bg-red-500/10 hover:text-red-400 transition-all"
-                  >
-                    <XCircle className="h-3 w-3" /> Suspend
-                  </button>
-                ) : (
-                  <button
-                    onClick={() => handleSuspend(user.id, "activate")}
-                    className="flex items-center gap-1.5 rounded-lg border border-emerald-500/30 px-3 py-2 text-xs font-medium text-emerald-400 hover:bg-emerald-500/10 hover:text-emerald-400 transition-all"
-                  >
-                    <CheckCircle2 className="h-3 w-3" /> Activate
-                  </button>
-                )}
-              </div>
-            </div>
+              </td>
+              <td className="px-5 py-4 text-right w-40 whitespace-nowrap">
+                <div className="flex items-center gap-2">
+                  {user.role !== "admin" && (
+                    <button
+                      onClick={() => handleRoleChange(user.id, user.role === "seeker" ? "recruiter" : "seeker")}
+                      className="flex items-center gap-1.5 rounded-lg border border-white/10 px-3 py-2 text-xs font-medium text-gray-400 hover:bg-white/10 hover:text-white transition-all whitespace-nowrap"
+                    >
+                      {user.role === "seeker" ? "Make Recruiter" : "Make Seeker"}
+                    </button>
+                  )}
+                  {user.status === "active" ? (
+                    <button
+                      onClick={() => handleSuspend(user.id, "suspend")}
+                      className="flex items-center gap-1.5 rounded-lg border border-red-500/30 px-3 py-2 text-xs font-medium text-red-400 hover:bg-red-500/10 hover:text-red-400 transition-all whitespace-nowrap"
+                    >
+                      <XCircle className="h-3 w-3" /> Suspend
+                    </button>
+                  ) : (
+                    <button
+                      onClick={() => handleSuspend(user.id, "activate")}
+                      className="flex items-center gap-1.5 rounded-lg border border-emerald-500/30 px-3 py-2 text-xs font-medium text-emerald-400 hover:bg-emerald-500/10 hover:text-emerald-400 transition-all whitespace-nowrap"
+                    >
+                      <CheckCircle2 className="h-3 w-3" /> Activate
+                    </button>
+                  )}
+                </div>
+              </td>
+            </tr>
           ))}
 
           {filteredUsers.length === 0 && (
@@ -191,7 +196,8 @@ export default function ManageUsersPage() {
               <p className="text-xs text-gray-600 mt-1">Try adjusting your search or filter</p>
             </div>
           )}
-        </div>
+        </tbody>
+        </table>
       </div>
 
       {/* Suspend/Activate dialog */}

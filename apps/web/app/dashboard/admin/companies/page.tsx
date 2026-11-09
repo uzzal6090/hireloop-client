@@ -90,62 +90,68 @@ export default function ManageCompaniesPage() {
       </div>
 
       {/* Companies Table */}
-      <div className="rounded-xl border border-white/10 bg-white/5 overflow-hidden">
-        <div className="hidden md:grid md:grid-cols-[1fr_auto_auto_auto_auto_auto] items-center gap-4 px-5 py-3 border-b border-white/10 bg-white/5">
-          <span className="text-[11px] font-semibold uppercase tracking-widest text-gray-500">Company Name</span>
-          <span className="text-[11px] font-semibold uppercase tracking-widest text-gray-500">Recruiter Email</span>
-          <span className="text-[11px] font-semibold uppercase tracking-widest text-gray-500 text-center w-32">Industry</span>
-          <span className="text-[11px] font-semibold uppercase tracking-widest text-gray-500 text-center w-28">Status</span>
-          <span className="text-[11px] font-semibold uppercase tracking-widest text-gray-500 text-center w-20">Submitted</span>
-          <span className="text-[11px] font-semibold uppercase tracking-widest text-gray-500 w-36 text-right">Actions</span>
-        </div>
-
-        <div className="divide-y divide-white/10">
-          {filteredCompanies.map(company => (
-            <div
-              key={company.id}
-              className="flex flex-col md:grid md:grid-cols-[1fr_auto_auto_auto_auto_auto] items-start md:items-center gap-3 md:gap-4 px-5 py-4 hover:bg-white/5 transition-colors"
-            >
-              <div className="flex items-center gap-3 min-w-0">
-                <div className="h-9 w-9 shrink-0 rounded-xl bg-gradient-to-br from-indigo-500 to-purple-600 flex items-center justify-center text-xs font-bold text-white">
-                  {company.name.charAt(0)}
-                </div>
-                <div className="min-w-0">
-                  <p className="text-sm font-semibold text-white leading-tight truncate">{company.name}</p>
-                  <p className="text-xs text-gray-400 truncate">{company.recruiterEmail}</p>
-                </div>
-              </div>
-              <div className="w-32 text-center">
-                <span className="text-xs text-gray-400">{company.industry}</span>
-              </div>
-              <div className="w-28">
-                <StatusBadge status={company.status} />
-              </div>
-              <div className="w-20 text-center">
-                <span className="text-xs text-gray-400">{company.dateSubmitted}</span>
-              </div>
-              <div className="w-36 flex flex-col sm:flex-row gap-2 justify-end">
-                {(company.status === "pending" || company.status === "rejected") && (
-                  <button
-                    onClick={() => handleApprove(company.id)}
-                    className="flex items-center gap-1.5 rounded-lg border border-emerald-500/30 px-3 py-2 text-xs font-medium text-emerald-400 hover:bg-emerald-500/10 hover:text-emerald-400 transition-all"
-                  >
-                    <CheckCircle2 className="h-3 w-3" />
-                    Approve
-                  </button>
-                )}
-                {(company.status === "pending" || company.status === "approved") && (
-                  <button
-                    onClick={() => handleReject(company.id)}
-                    className="flex items-center gap-1.5 rounded-lg border border-red-500/30 px-3 py-2 text-xs font-medium text-red-400 hover:bg-red-500/10 hover:text-red-400 transition-all"
-                  >
-                    <XCircle className="h-3 w-3" />
-                    Reject
-                  </button>
-                )}
-              </div>
-            </div>
-          ))}
+      <div className="rounded-xl border border-white/10 bg-white/5 overflow-x-auto">
+        <table className="min-w-full text-left border-collapse">
+          <thead>
+            <tr className="border-b border-white/10 bg-white/5">
+              <th className="px-5 py-3 font-semibold uppercase tracking-widest text-[11px] text-gray-500">Company Name</th>
+              <th className="px-5 py-3 font-semibold uppercase tracking-widest text-[11px] text-gray-500">Recruiter Email</th>
+              <th className="px-5 py-3 text-center font-semibold uppercase tracking-widest text-[11px] text-gray-500 w-32">Industry</th>
+              <th className="px-5 py-3 text-center font-semibold uppercase tracking-widest text-[11px] text-gray-500 w-28">Status</th>
+              <th className="px-5 py-3 text-center font-semibold uppercase tracking-widest text-[11px] text-gray-500 w-20">Submitted</th>
+              <th className="px-5 py-3 text-right font-semibold uppercase tracking-widest text-[11px] text-gray-500 w-36">Actions</th>
+            </tr>
+          </thead>
+          <tbody className="divide-y divide-white/10">
+            {filteredCompanies.map(company => (
+              <tr key={company.id} className="hover:bg-white/5 transition-colors border-b border-white/10 last:border-0">
+                <td className="px-5 py-4 text-left min-w-0">
+                  <div className="flex items-center gap-3">
+                    <div className="h-9 w-9 shrink-0 rounded-xl bg-gradient-to-br from-indigo-500 to-purple-600 flex items-center justify-center text-xs font-bold text-white">
+                      {company.name.charAt(0)}
+                    </div>
+                    <div className="min-w-0">
+                      <p className="text-sm font-semibold text-white leading-tight truncate">{company.name}</p>
+                      <p className="text-xs text-gray-400 truncate">{company.recruiterEmail}</p>
+                    </div>
+                  </div>
+                </td>
+                <td className="px-5 py-4 text-left min-w-0">
+                  <span className="text-xs text-gray-400 truncate">{company.recruiterEmail}</span>
+                </td>
+                <td className="px-5 py-4 text-center w-32 whitespace-nowrap overflow-hidden text-ellipsis">
+                  <span className="text-xs text-gray-400">{company.industry}</span>
+                </td>
+                <td className="px-5 py-4 text-center w-28 whitespace-nowrap overflow-hidden text-ellipsis">
+                  <StatusBadge status={company.status} />
+                </td>
+                <td className="px-5 py-4 text-center w-20 whitespace-nowrap overflow-hidden text-ellipsis">
+                  <span className="text-xs text-gray-400">{company.dateSubmitted}</span>
+                </td>
+                <td className="px-5 py-4 text-right w-36 whitespace-nowrap">
+                  <div className="flex items-center gap-2">
+                    {(company.status === "pending" || company.status === "rejected") && (
+                      <button
+                        onClick={() => handleApprove(company.id)}
+                        className="flex items-center gap-1.5 rounded-lg border border-emerald-500/30 px-3 py-2 text-xs font-medium text-emerald-400 hover:bg-emerald-500/10 hover:text-emerald-400 transition-all whitespace-nowrap"
+                      >
+                        <CheckCircle2 className="h-3 w-3" />
+                        Approve
+                      </button>
+                    )}
+                    {(company.status === "pending" || company.status === "approved") && (
+                      <button
+                        onClick={() => handleReject(company.id)}
+                        className="flex items-center gap-1.5 rounded-lg border border-red-500/30 px-3 py-2 text-xs font-medium text-red-400 hover:bg-red-500/10 hover:text-red-400 transition-all whitespace-nowrap"
+                      >
+                        <XCircle className="h-3 w-3" />
+                        Reject
+                      </button>
+                    )}
+                  </div>
+                </td>
+              </tr>
+            ))}
 
           {filteredCompanies.length === 0 && (
             <div className="p-12 text-center">
@@ -154,7 +160,8 @@ export default function ManageCompaniesPage() {
               <p className="text-xs text-gray-600 mt-1">Try adjusting your search</p>
             </div>
           )}
-        </div>
+        </tbody>
+        </table>
       </div>
 
       {/* Approve dialog */}

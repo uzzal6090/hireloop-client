@@ -91,44 +91,46 @@ export default function AdminPaymentsPage() {
       </div>
 
       {/* Payments Table */}
-      <div className="rounded-xl border border-white/10 bg-white/5 overflow-hidden">
-        <div className="hidden md:grid md:grid-cols-[1fr_auto_auto_auto_auto_auto] items-center gap-4 px-5 py-3 border-b border-white/10 bg-white/5">
-          <span className="text-[11px] font-semibold uppercase tracking-widest text-gray-500">User Email</span>
-          <span className="text-[11px] font-semibold uppercase tracking-widest text-gray-500 text-center w-24">Plan</span>
-          <span className="text-[11px] font-semibold uppercase tracking-widest text-gray-500 text-center w-20">Amount</span>
-          <span className="text-[11px] font-semibold uppercase tracking-widest text-gray-500 text-center w-24">Date</span>
-          <span className="text-[11px] font-semibold uppercase tracking-widest text-gray-500 w-24 text-right">Transaction ID</span>
-          <span className="text-[11px] font-semibold uppercase tracking-widest text-gray-500 w-24 text-right">Status</span>
-        </div>
-
-        <div className="divide-y divide-white/10">
-          {payments.map(payment => (
-            <div
-              key={payment.id}
-              className="flex flex-col md:grid md:grid-cols-[1fr_auto_auto_auto_auto_auto] items-start md:items-center gap-3 md:gap-4 px-5 py-4 hover:bg-white/5 transition-colors"
-            >
-              <div className="min-w-0">
-                <p className="text-sm font-semibold text-white leading-tight truncate">{payment.userEmail}</p>
-              </div>
-              <div className="w-24 text-center">
-                <StatusBadge status={payment.plan} />
-              </div>
-              <div className="w-20 text-center">
-                <span className="text-sm font-semibold text-white">{payment.amount}</span>
-              </div>
-              <div className="w-24">
-                <div className="text-xs font-medium text-white">{payment.date}</div>
-                <div className="text-[11px] text-gray-500">{payment.relativeDate}</div>
-              </div>
-              <div className="w-24 flex justify-end">
-                <span className="font-mono text-xs text-gray-400">{payment.id}</span>
-              </div>
-              <div className="w-24 flex justify-end">
-                <StatusBadge status={payment.status} />
-              </div>
-            </div>
-          ))}
-        </div>
+      <div className="rounded-xl border border-white/10 bg-white/5 overflow-x-auto">
+        <table className="min-w-full text-left border-collapse">
+          <thead>
+            <tr className="border-b border-white/10 bg-white/5">
+              <th className="px-5 py-3 font-semibold uppercase tracking-widest text-[11px] text-gray-500">User Email</th>
+              <th className="px-5 py-3 text-center font-semibold uppercase tracking-widest text-[11px] text-gray-500 w-24">Plan</th>
+              <th className="px-5 py-3 text-center font-semibold uppercase tracking-widest text-[11px] text-gray-500 w-20">Amount</th>
+              <th className="px-5 py-3 text-center font-semibold uppercase tracking-widest text-[11px] text-gray-500 w-24">Date</th>
+              <th className="px-5 py-3 text-right font-semibold uppercase tracking-widest text-[11px] text-gray-500 w-24">Transaction ID</th>
+              <th className="px-5 py-3 text-right font-semibold uppercase tracking-widest text-[11px] text-gray-500 w-24">Status</th>
+            </tr>
+          </thead>
+          <tbody className="divide-y divide-white/10">
+            {payments.map(payment => (
+              <tr key={payment.id} className="hover:bg-white/5 transition-colors border-b border-white/10 last:border-0">
+                <td className="px-5 py-4 text-left min-w-0">
+                  <p className="text-sm font-semibold text-white leading-tight truncate">{payment.userEmail}</p>
+                </td>
+                <td className="px-5 py-4 text-center w-24 whitespace-nowrap overflow-hidden text-ellipsis">
+                  <StatusBadge status={payment.plan} />
+                </td>
+                <td className="px-5 py-4 text-center w-20 whitespace-nowrap overflow-hidden text-ellipsis">
+                  <span className="text-sm font-semibold text-white">{payment.amount}</span>
+                </td>
+                <td className="px-5 py-4 text-center w-24 whitespace-nowrap overflow-hidden text-ellipsis">
+                  <div className="flex flex-col items-center gap-1">
+                    <div className="text-xs font-medium text-white">{payment.date}</div>
+                    <div className="text-[11px] text-gray-500">{payment.relativeDate}</div>
+                  </div>
+                </td>
+                <td className="px-5 py-4 text-right w-24 whitespace-nowrap overflow-hidden text-ellipsis">
+                  <span className="font-mono text-xs text-gray-400 truncate">{payment.id}</span>
+                </td>
+                <td className="px-5 py-4 text-right w-24 whitespace-nowrap overflow-hidden text-ellipsis">
+                  <StatusBadge status={payment.status} />
+                </td>
+              </tr>
+            ))}
+          </tbody>
+        </table>
       </div>
     </div>
   )

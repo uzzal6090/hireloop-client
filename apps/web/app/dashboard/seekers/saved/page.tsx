@@ -31,64 +31,68 @@ export default function SavedJobsPage() {
           <p className="text-xs text-gray-600 mt-1">Browse jobs and bookmark the ones you like</p>
         </div>
       ) : (
-        <div className="rounded-xl border border-white/10 bg-white/5 overflow-hidden">
-          {/* Table header */}
-          <div className="hidden md:grid md:grid-cols-[1fr_auto_auto_auto_auto] items-center gap-4 px-5 py-3 border-b border-white/10 bg-white/5">
-            <span className="text-[11px] font-semibold uppercase tracking-widest text-gray-500">Job</span>
-            <span className="text-[11px] font-semibold uppercase tracking-widest text-gray-500 w-28">Location</span>
-            <span className="text-[11px] font-semibold uppercase tracking-widest text-gray-500 w-24">Salary</span>
-            <span className="text-[11px] font-semibold uppercase tracking-widest text-gray-500 w-28">Date Saved</span>
-            <span className="text-[11px] font-semibold uppercase tracking-widest text-gray-500 w-32 text-right">Actions</span>
-          </div>
-
-          {/* Rows */}
-          <div className="divide-y divide-white/10">
-            {jobs.map(job => (
-              <div key={job.id} className="flex flex-col md:grid md:grid-cols-[1fr_auto_auto_auto_auto] items-start md:items-center gap-3 md:gap-4 px-5 py-4 hover:bg-white/5 transition-colors">
-                {/* Job info */}
-                <div className="flex items-center gap-3 min-w-0">
-                  <div className={`h-9 w-9 shrink-0 rounded-lg bg-gradient-to-br ${job.logoColor} flex items-center justify-center text-xs font-bold text-white`}>
-                    {job.logo}
-                  </div>
-                  <div className="min-w-0">
-                    <p className="text-sm font-semibold text-white leading-tight truncate">{job.title}</p>
-                    <p className="text-xs text-gray-400">{job.company} · {job.type}</p>
-                  </div>
-                </div>
-
-                <div className="flex items-center gap-1 text-xs text-gray-400 w-28">
-                  <MapPin className="h-3 w-3 shrink-0" />
-                  <span className="truncate">{job.location}</span>
-                </div>
-
-                <div className="flex items-center gap-1 text-xs text-gray-400 w-24">
-                  <DollarSign className="h-3 w-3 shrink-0" />
-                  <span>{job.salary}</span>
-                </div>
-
-                <div className="flex items-center gap-1 text-xs text-gray-500 w-28">
-                  <Calendar className="h-3 w-3 shrink-0" />
-                  <span>{job.dateSaved}</span>
-                </div>
-
-                {/* Actions */}
-                <div className="flex items-center gap-2 w-32 justify-end">
-                  <button className="flex items-center gap-1 rounded-lg bg-gradient-to-r from-indigo-600 to-purple-600 px-3 py-1.5 text-xs font-semibold text-white shadow-sm transition-all hover:-translate-y-0.5">
-                    Apply
-                  </button>
-                  <button
-                    onClick={() => removeJob(job.id)}
-                    className="rounded-lg border border-white/10 p-1.5 text-gray-500 hover:border-red-500/40 hover:bg-red-500/10 hover:text-red-400 transition-all"
-                  >
-                    <Trash2 className="h-3.5 w-3.5" />
-                  </button>
-                </div>
-              </div>
-            ))}
-          </div>
+        <div className="rounded-xl border border-white/10 bg-white/5 overflow-x-auto">
+          <table className="min-w-full text-left border-collapse">
+            <thead>
+              <tr className="border-b border-white/10 bg-white/5">
+                <th className="px-5 py-3 font-semibold uppercase tracking-widest text-[11px] text-gray-500">Job</th>
+                <th className="px-5 py-3 text-center font-semibold uppercase tracking-widest text-[11px] text-gray-500 w-28">Location</th>
+                <th className="px-5 py-3 text-center font-semibold uppercase tracking-widest text-[11px] text-gray-500 w-24">Salary</th>
+                <th className="px-5 py-3 text-center font-semibold uppercase tracking-widest text-[11px] text-gray-500 w-28">Date Saved</th>
+                <th className="px-5 py-3 text-right font-semibold uppercase tracking-widest text-[11px] text-gray-500 w-32">Actions</th>
+              </tr>
+            </thead>
+            <tbody className="divide-y divide-white/10">
+              {jobs.map(job => (
+                <tr key={job.id} className="hover:bg-white/5 transition-colors border-b border-white/10 last:border-0">
+                  <td className="px-5 py-4 text-left min-w-0">
+                    <div className="flex items-center gap-3">
+                      <div className={`h-9 w-9 shrink-0 rounded-lg bg-gradient-to-br ${job.logoColor} flex items-center justify-center text-xs font-bold text-white`}>
+                        {job.logo}
+                      </div>
+                      <div className="min-w-0">
+                        <p className="text-sm font-semibold text-white leading-tight truncate">{job.title}</p>
+                        <p className="text-xs text-gray-400">{job.company} · {job.type}</p>
+                      </div>
+                    </div>
+                  </td>
+                  <td className="px-5 py-4 text-center w-28 whitespace-nowrap overflow-hidden text-ellipsis">
+                    <div className="flex items-center gap-1 text-xs text-gray-400">
+                      <MapPin className="h-3 w-3 shrink-0" />
+                      <span className="truncate">{job.location}</span>
+                    </div>
+                  </td>
+                  <td className="px-5 py-4 text-center w-24 whitespace-nowrap overflow-hidden text-ellipsis">
+                    <div className="flex items-center gap-1 text-xs text-gray-400">
+                      <DollarSign className="h-3 w-3 shrink-0" />
+                      <span>{job.salary}</span>
+                    </div>
+                  </td>
+                  <td className="px-5 py-4 text-center w-28 whitespace-nowrap overflow-hidden text-ellipsis">
+                    <div className="flex items-center gap-1 text-xs text-gray-500">
+                      <Calendar className="h-3 w-3 shrink-0" />
+                      <span>{job.dateSaved}</span>
+                    </div>
+                  </td>
+                  <td className="px-5 py-4 text-right w-32">
+                    <div className="flex items-center gap-2 justify-end">
+                      <button className="flex items-center gap-1 rounded-lg bg-gradient-to-r from-indigo-600 to-purple-600 px-3 py-1.5 text-xs font-semibold text-white shadow-sm transition-all hover:-translate-y-0.5">
+                        Apply
+                      </button>
+                      <button
+                        onClick={() => removeJob(job.id)}
+                        className="rounded-lg border border-white/10 p-1.5 text-gray-500 hover:border-red-500/40 hover:bg-red-500/10 hover:text-red-400 transition-all"
+                      >
+                        <Trash2 className="h-3.5 w-3.5" />
+                      </button>
+                    </div>
+                  </td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
         </div>
       )}
     </div>
   )
 }
-
