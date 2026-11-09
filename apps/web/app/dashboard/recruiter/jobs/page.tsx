@@ -107,69 +107,68 @@ export default function ManageJobsPage() {
     const displayStatus = isClosed ? "Closed" : job.status
 
     return (
-      <div
-        key={job.id}
-        className="flex flex-col md:grid md:grid-cols-[2fr_auto_auto_auto_auto] items-start md:items-center gap-3 md:gap-4 px-5 py-4 hover:bg-white/5 transition-colors"
-      >
-        <div className="min-w-0">
-          <p className="text-sm font-semibold text-white leading-tight truncate">
-            {job.title}
-          </p>
-          <p className="text-xs text-gray-400">
-            {job.company} &middot; {job.category} &middot; {job.type}
-          </p>
-        </div>
-        <div className="min-w-0 w-24">
+      <tr key={job.id} className="hover:bg-white/5 transition-colors border-b border-white/10 last:border-0">
+        <td className="px-5 py-4 text-left min-w-0">
+          <div className="flex flex-col gap-1">
+            <p className="text-sm font-semibold text-white leading-tight truncate">
+              {job.title}
+            </p>
+            <p className="text-xs text-gray-400 truncate">
+              {job.company} &middot; {job.category} &middot; {job.type}
+            </p>
+          </div>
+        </td>
+        <td className="px-5 py-4 text-center w-24">
           <StatusBadge status={displayStatus} />
-        </div>
-        <div className="min-w-0 w-24 text-center overflow-hidden">
-          <span className="text-xs font-medium text-white truncate">
+        </td>
+        <td className="px-5 py-4 text-center w-24 whitespace-nowrap overflow-hidden text-ellipsis">
+          <span className="text-xs font-medium text-white">
             {job.applicants}
           </span>
-        </div>
-        <div className="min-w-0 w-24 text-center overflow-hidden">
-          <span className="text-xs text-gray-400 truncate">
-            {job.datePosted}
-          </span>
-        </div>
-        <div className="w-40 flex flex-col sm:flex-row gap-2 justify-end">
-          <Link href="/dashboard/recruiter/applications">
+        </td>
+        <td className="px-5 py-4 text-center w-24 whitespace-nowrap overflow-hidden text-ellipsis">
+          <span className="text-xs text-gray-400">{job.datePosted}</span>
+        </td>
+        <td className="px-5 py-4 text-right w-40">
+          <div className="flex flex-col sm:flex-row gap-2 justify-end">
+            <Link href="/dashboard/recruiter/applications">
+              <button
+                className="flex items-center gap-1.5 rounded-lg border border-white/10 px-3 py-2 text-xs font-medium text-gray-400 hover:bg-white/10 hover:text-white transition-all"
+              >
+                <ExternalLink className="h-3 w-3" /> Applicants
+              </button>
+            </Link>
+            {job.status === "Active" ? (
+              <button
+                onClick={() => handleToggleStatus(job.id)}
+                className="flex items-center gap-1.5 rounded-lg border border-white/10 px-3 py-2 text-xs font-medium text-yellow-400 hover:bg-white/5 hover:text-yellow-400 transition-all"
+              >
+                <Clock className="h-3 w-3" /> Close
+              </button>
+            ) : job.status === "Closed" ? (
+              <button
+                onClick={() => handleToggleStatus(job.id)}
+                className="flex items-center gap-1.5 rounded-lg border border-white/10 px-3 py-2 text-xs font-medium text-emerald-400 hover:bg-white/5 hover:text-emerald-400 transition-all"
+              >
+                <CheckCircle2 className="h-3 w-3" /> Reopen
+              </button>
+            ) : (
+              <button
+                onClick={() => handleToggleStatus(job.id)}
+                className="flex items-center gap-1.5 rounded-lg border border-white/10 px-3 py-2 text-xs font-medium text-gray-400 hover:bg-white/5 hover:text-white transition-all"
+              >
+                Publish
+              </button>
+            )}
             <button
-              className="flex items-center gap-1.5 rounded-lg border border-white/10 px-3 py-2 text-xs font-medium text-gray-400 hover:bg-white/10 hover:text-white transition-all"
+              onClick={() => handleDelete(job.id)}
+              className="rounded-lg border border-white/10 p-2 text-gray-500 hover:border-red-500/40 hover:bg-red-500/10 hover:text-red-400 transition-all"
             >
-              <ExternalLink className="h-3 w-3" /> Applicants
+              <Trash2 className="h-3.5 w-3.5" />
             </button>
-          </Link>
-          {job.status === "Active" ? (
-            <button
-              onClick={() => handleToggleStatus(job.id)}
-              className="flex items-center gap-1.5 rounded-lg border border-white/10 px-3 py-2 text-xs font-medium text-yellow-400 hover:bg-white/5 hover:text-yellow-400 transition-all"
-            >
-              <Clock className="h-3 w-3" /> Close
-            </button>
-          ) : job.status === "Closed" ? (
-            <button
-              onClick={() => handleToggleStatus(job.id)}
-              className="flex items-center gap-1.5 rounded-lg border border-white/10 px-3 py-2 text-xs font-medium text-emerald-400 hover:bg-white/5 hover:text-emerald-400 transition-all"
-            >
-              <CheckCircle2 className="h-3 w-3" /> Reopen
-            </button>
-          ) : (
-            <button
-              onClick={() => handleToggleStatus(job.id)}
-              className="flex items-center gap-1.5 rounded-lg border border-white/10 px-3 py-2 text-xs font-medium text-gray-400 hover:bg-white/5 hover:text-white transition-all"
-            >
-              Publish
-            </button>
-          )}
-          <button
-            onClick={() => handleDelete(job.id)}
-            className="rounded-lg border border-white/10 p-2 text-gray-500 hover:border-red-500/40 hover:bg-red-500/10 hover:text-red-400 transition-all"
-          >
-            <Trash2 className="h-3.5 w-3.5" />
-          </button>
-        </div>
-      </div>
+          </div>
+        </td>
+      </tr>
     )
   })
 
@@ -229,25 +228,28 @@ export default function ManageJobsPage() {
 
       {/* Jobs table */}
       <div className="rounded-xl border border-white/10 bg-white/5 overflow-hidden">
-        <div className="hidden md:grid md:grid-cols-[2fr_auto_auto_auto_auto] items-center gap-4 px-5 py-3 border-b border-white/10 bg-white/5">
-          <span className="text-[11px] font-semibold uppercase tracking-widest text-gray-500">
-            Job Title
-          </span>
-          <span className="text-[11px] font-semibold uppercase tracking-widest text-gray-500 text-center min-w-0 w-24">
-            Status
-          </span>
-          <span className="text-[11px] font-semibold uppercase tracking-widest text-gray-500 text-center min-w-0 w-24">
-            Applicants
-          </span>
-          <span className="text-[11px] font-semibold uppercase tracking-widest text-gray-500 text-center min-w-0 w-24">
-            Posted
-          </span>
-          <span className="text-[11px] font-semibold uppercase tracking-widest text-gray-500 min-w-0 w-40 text-right">
-            Actions
-          </span>
-        </div>
-
-        <div className="divide-y divide-white/10">{jobRows}</div>
+        <table className="w-full text-left border-collapse">
+          <thead>
+            <tr className="border-b border-white/10 bg-white/5">
+              <th className="px-5 py-3 font-semibold uppercase tracking-widest text-[11px] text-gray-500">
+                Job Title
+              </th>
+              <th className="px-5 py-3 text-center font-semibold uppercase tracking-widest text-[11px] text-gray-500 w-24">
+                Status
+              </th>
+              <th className="px-5 py-3 text-center font-semibold uppercase tracking-widest text-[11px] text-gray-500 w-24">
+                Applicants
+              </th>
+              <th className="px-5 py-3 text-center font-semibold uppercase tracking-widest text-[11px] text-gray-500 w-24">
+                Posted
+              </th>
+              <th className="px-5 py-3 text-right font-semibold uppercase tracking-widest text-[11px] text-gray-500 w-40">
+                Actions
+              </th>
+            </tr>
+          </thead>
+          <tbody className="divide-y divide-white/10">{jobRows}</tbody>
+        </table>
 
         {jobs.length === 0 && (
           <div className="p-12 text-center">
