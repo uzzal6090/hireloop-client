@@ -1,23 +1,21 @@
 "use client"
 
-import * as React from "react"
-import Image from "next/image"
-import Link from "next/link"
+import { useSession, signOut } from "@/lib/auth-client"
 import { usePathname, useRouter } from "next/navigation"
-import { signOut, useSession } from "@/lib/auth-client"
+import Link from "next/link"
+import { cn } from "@workspace/ui/lib/utils"
 import {
   Sidebar,
   SidebarContent,
   SidebarFooter,
+  SidebarGroup,
   SidebarHeader,
   SidebarMenu,
   SidebarMenuItem,
   SidebarMenuButton,
-  SidebarGroup,
-  SidebarGroupLabel,
   SidebarSeparator,
+  SidebarMenuSkeleton,
 } from "@workspace/ui/components/sidebar"
-import { cn } from "@workspace/ui/lib/utils"
 import {
   LayoutDashboard,
   Briefcase,
@@ -27,227 +25,232 @@ import {
   Settings,
   Building2,
   Users,
-  ShieldCheck,
-  LogOut,
-  ChevronRight,
-  Home,
-  Search,
+  Building,
   DollarSign,
-  ListChecks,
-  UserCog,
-  BarChart3,
-  PlusSquare,
+  LogOut,
+  Upload,
+  Plus,
+  House,
+  type LucideIcon,
 } from "lucide-react"
+import Image from "next/image"
 import logoImage from "@/app/assest/logo.png"
 
-type UserRole = "admin" | "recruiter" | "seeker"
+type Role = "seeker" | "recruiter" | "admin"
 
 interface NavItem {
-  label: string
-  href: string
-  icon: React.ComponentType<{ className?: string }>
+  name: string
+  url: string
+  icon: LucideIcon
 }
 
-const seekerNav: NavItem[] = [
-  { label: "Overview",         href: "/dashboard/seekers",              icon: LayoutDashboard },
-  { label: "Browse & Apply",   href: "/dashboard/seekers/jobs",         icon: Search },
-  { label: "Saved Jobs",       href: "/dashboard/seekers/saved",        icon: Bookmark },
-  { label: "My Applications",  href: "/dashboard/seekers/applications", icon: FileText },
-  { label: "Billing",          href: "/dashboard/seekers/billing",      icon: CreditCard },
-  { label: "Settings",         href: "/dashboard/seekers/settings",     icon: Settings },
-]
+const NAV_ITEMS: Record<Role, NavItem[]> = {
+  seeker: [
+    { name: "Dashboard", url: "/dashboard/seekers", icon: LayoutDashboard },
+    { name: "Jobs", url: "/dashboard/seekers/jobs", icon: Briefcase },
+    { name: "Saved Jobs", url: "/dashboard/seekers/saved", icon: Bookmark },
+    { name: "Applications", url: "/dashboard/seekers/applications", icon: FileText },
+    { name: "Billing", url: "/dashboard/seekers/billing", icon: CreditCard },
+    { name: "Settings", url: "/dashboard/seekers/settings", icon: Settings },
+  ],
+  recruiter: [
+    { name: "Dashboard", url: "/dashboard/recruiter", icon: LayoutDashboard },
+    { name: "Add Job", url: "/dashboard/recruiter/jobs/new", icon: Plus },
+    { name: "Manage Jobs", url: "/dashboard/recruiter/jobs", icon: Briefcase },
+    { name: "Applications", url: "/dashboard/recruiter/jobs", icon: FileText },
+    { name: "My Company", url: "/dashboard/recruiter/company", icon: Building2 },
+    { name: "Settings", url: "/dashboard/recruiter/settings", icon: Settings },
+  ],
+  admin: [
+    { name: "Dashboard", url: "/dashboard/admin", icon: LayoutDashboard },
+    { name: "Users", url: "/dashboard/admin/users", icon: Users },
+    { name: "Companies", url: "/dashboard/admin/companies", icon: Building },
+    { name: "Jobs", url: "/dashboard/admin/jobs", icon: Briefcase },
+    { name: "Payments", url: "/dashboard/admin/payments", icon: DollarSign },
+    { name: "Settings", url: "/dashboard/admin/settings", icon: Settings },
+  ],
+}
 
-const recruiterNav: NavItem[] = [
-  { label: "Overview",       href: "/dashboard/recruiter",                   icon: LayoutDashboard },
-  { label: "My Company",     href: "/dashboard/recruiter/company",           icon: Building2 },
-  { label: "Manage Jobs",    href: "/dashboard/recruiter/jobs",              icon: Briefcase },
-  { label: "Post a Job",     href: "/dashboard/recruiter/jobs/new",          icon: PlusSquare },
-  { label: "Billing",        href: "/dashboard/recruiter/billing",           icon: CreditCard },
-  { label: "Settings",       href: "/dashboard/recruiter/settings",          icon: Settings },
-]
-
-const adminNav: NavItem[] = [
-  { label: "Overview",       href: "/dashboard/admin",           icon: LayoutDashboard },
-  { label: "Manage Users",   href: "/dashboard/admin/users",     icon: Users },
-  { label: "Companies",      href: "/dashboard/admin/companies", icon: Building2 },
-  { label: "Manage Jobs",    href: "/dashboard/admin/jobs",      icon: Briefcase },
-  { label: "Payments",       href: "/dashboard/admin/payments",  icon: DollarSign },
-  { label: "Settings",       href: "/dashboard/admin/settings",  icon: Settings },
-]
-
-const publicNav: NavItem[] = [
-  { label: "Home",        href: "/",          icon: Home },
-  { label: "Browse Jobs", href: "/jobs",       icon: Search },
-  { label: "Companies",   href: "/companies",  icon: Building2 },
-  { label: "Pricing",     href: "/pricing",    icon: DollarSign },
-]
-
-const navByRole: Record<UserRole, NavItem[]> = {
-  seeker:    seekerNav,
-  recruiter: recruiterNav,
-  admin:     adminNav,
+const ROLE_LABELS: Record<Role, string> = {
+  seeker: "Seeker",
+  recruiter: "Recruiter",
+  admin: "Admin",
 }
 
 export function DashboardSidebar() {
   const { data: session, isPending } = useSession()
-  const pathname = usePathname()
   const router = useRouter()
+  const pathname = usePathname()
 
-  const rawRole = (session?.user as { role?: string })?.role
-  const role: UserRole =
-    rawRole === "admin" || rawRole === "recruiter" || rawRole === "seeker"
-      ? rawRole
-      : "seeker"
-
-  const navItems = navByRole[role]
   const user = session?.user
+  const rawRole = (user as { role?: string })?.role
+  const role: Role | null =
+    rawRole === "seeker" || rawRole === "recruiter" || rawRole === "admin"
+      ? rawRole
+      : null
 
-  const handleSignOut = async () => {
-    await signOut()
-    router.push("/")
+  const items = role ? NAV_ITEMS[role] : []
+  const isActive = (url: string) => pathname === url
+
+  const handleLogout = async () => {
+    try {
+      await signOut()
+      router.push("/")
+    } catch (err) {
+      console.error("Logout failed:", err)
+    }
   }
 
-  const renderAvatar = () => {
-    if (!user) return null
-    if (user.image) {
-      return (
-        <Image
-          src={user.image}
-          alt={user.name ?? "User"}
-          width={36}
-          height={36}
-          unoptimized
-          className="h-9 w-9 rounded-full object-cover ring-2 ring-sidebar-border"
-        />
-      )
-    }
+  const initials = user?.name
+    ? user.name
+        .split(" ")
+        .map((n) => n[0])
+        .join("")
+        .toUpperCase()
+        .slice(0, 2)
+    : "U"
+
+  if (isPending) {
     return (
-      <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-sidebar-accent text-sidebar-accent-foreground text-sm font-semibold ring-2 ring-sidebar-border">
-        {user.name?.charAt(0).toUpperCase() ?? "U"}
-      </div>
+      <Sidebar>
+        <SidebarHeader className="px-3 pt-4 pb-2">
+          <SidebarMenuSkeleton showIcon width="60%" />
+        </SidebarHeader>
+        <SidebarContent className="px-2">
+          <SidebarGroup className="px-3 py-3">
+            <SidebarMenuSkeleton showIcon width="70%" />
+          </SidebarGroup>
+          <SidebarSeparator className="mx-2 my-1" />
+          <SidebarGroup className="px-3 py-1">
+            <SidebarMenu>
+              {[1, 2, 3].map((i) => (
+                <SidebarMenuItem key={`skeleton-${i}`}>
+                  <SidebarMenuSkeleton showIcon width={`${55 + i * 15}%`} />
+                </SidebarMenuItem>
+              ))}
+            </SidebarMenu>
+          </SidebarGroup>
+        </SidebarContent>
+        <SidebarFooter className="px-3 py-2">
+          <SidebarMenuSkeleton showIcon width="60%" />
+          <SidebarMenuSkeleton showIcon width="75%" />
+        </SidebarFooter>
+      </Sidebar>
     )
   }
 
   return (
-    <Sidebar className="border-r border-sidebar-border bg-sidebar">
-      {/* ── Header ── */}
-      <SidebarHeader className="px-4 py-4 border-b border-sidebar-border">
-        <Link href="/" className="flex items-center gap-2.5">
-          <Image
-            src={logoImage}
-            alt="HireLoop"
-            width={32}
-            height={32}
-            className="h-8 w-auto object-contain"
-            priority
-          />
-          <span className="text-base font-bold tracking-tight text-sidebar-foreground">
-            HireLoop
-          </span>
-        </Link>
+    <Sidebar>
+      {/* 1. LOGO - at the very top */}
+      <SidebarHeader className="px-3 pt-4 pb-2">
+        <Image
+          src={logoImage}
+          alt="HireLoop Logo"
+          width={154}
+          height={44}
+          className="block shrink-0"
+          unoptimized
+          priority
+        />
       </SidebarHeader>
 
-      {/* ── Main Nav ── */}
-      <SidebarContent className="px-3 py-3">
-        <SidebarGroup>
-          <SidebarGroupLabel className="mb-1 px-2 text-[10px] font-semibold uppercase tracking-widest text-sidebar-foreground/70">
-            {role === "admin" ? "Admin Panel" : role === "recruiter" ? "Recruiter" : "Job Seeker"}
-          </SidebarGroupLabel>
-          <SidebarMenu className="space-y-0.5">
-            {navItems.map((item) => {
-              const isActive = pathname === item.href
+      {/* 2. USER PROFILE - immediately below logo */}
+      <SidebarContent className="px-2">
+        <SidebarGroup className="px-3 py-3">
+          <div className="flex flex-col gap-2">
+            <div className="flex items-center gap-3">
+              <div className="relative">
+                {user?.image ? (
+                  <Image
+                    src={user.image}
+                    alt={user.name ?? "User"}
+                    width={40}
+                    height={40}
+                    className="rounded-full object-cover border border-white/10"
+                    unoptimized
+                  />
+                ) : (
+                  <div className="h-10 w-10 rounded-full bg-gradient-to-br from-indigo-500 to-purple-600 flex items-center justify-center text-sm font-bold text-white ring-2 ring-white/10">
+                    {initials}
+                  </div>
+                )}
+              </div>
+              <div className="min-w-0 flex-1">
+                <p className="text-sm font-semibold text-sidebar-foreground truncate">
+                  {user?.name ?? "User"}
+                </p>
+                {user?.email && (
+                  <p className="text-xs text-sidebar-foreground/60 truncate">
+                    {user.email}
+                  </p>
+                )}
+                <p className="text-[10px] font-medium text-sidebar-primary uppercase tracking-wider">
+                  {role ? ROLE_LABELS[role] : "Unknown"}
+                </p>
+              </div>
+            </div>
+          </div>
+        </SidebarGroup>
+
+        {/* 3. DIVIDER */}
+        <SidebarSeparator className="mx-2 my-1" />
+
+        {/* 4. ROLE-SPECIFIC NAVIGATION */}
+        <SidebarGroup className="px-3 py-1">
+          <SidebarMenu>
+            {items.map((item) => {
+              const active = isActive(item.url)
+              const ItemIcon = item.icon
               return (
-                <SidebarMenuItem key={item.href}>
+                <SidebarMenuItem key={item.name}>
                   <SidebarMenuButton
-                    render={<Link href={item.href} />}
-                    isActive={isActive}
                     className={cn(
-                      "flex w-full items-center gap-3 rounded-lg px-3 py-2.5 text-sm font-medium transition-all",
-                      !isActive && "text-sidebar-foreground/70 hover:bg-sidebar-accent hover:text-sidebar-accent-foreground"
+                      active
+                        ? "border-l-2 border-l-sidebar-primary bg-sidebar-accent/40 text-sidebar-primary! [&_svg]:text-sidebar-primary!"
+                        : "text-sidebar-foreground/50 hover:bg-sidebar-accent/10 hover:text-sidebar-foreground!",
                     )}
-                  >
-                    <item.icon
-                      className={cn(
-                        "h-4 w-4 shrink-0",
-                        isActive ? "text-sidebar-accent-foreground" : "text-sidebar-foreground/60"
-                      )}
-                    />
-                    <span className={isActive ? "text-sidebar-foreground" : "text-sidebar-foreground/70"}>
-                      {item.label}
-                    </span>
-                    {isActive && (
-                      <ChevronRight className="ml-auto h-3 w-3 text-sidebar-accent-foreground" />
-                    )}
-                  </SidebarMenuButton>
+                    render={
+                      <Link
+                        href={item.url}
+                        className="flex w-full items-center gap-2.5"
+                      >
+                        <ItemIcon className="h-4 w-4 shrink-0" />
+                        <span className="text-sm font-medium">{item.name}</span>
+                      </Link>
+                    }
+                  />
                 </SidebarMenuItem>
               )
             })}
           </SidebarMenu>
         </SidebarGroup>
-
-        <SidebarSeparator className="my-3" />
-
-        {/* Public nav links */}
-        <SidebarGroup>
-          <SidebarGroupLabel className="mb-1 px-2 text-[10px] font-semibold uppercase tracking-widest text-sidebar-foreground/70">
-            Explore
-          </SidebarGroupLabel>
-          <SidebarMenu className="space-y-0.5">
-            {publicNav.map((item) => (
-              <SidebarMenuItem key={item.href}>
-                <SidebarMenuButton
-                  render={<Link href={item.href} />}
-                  className="flex w-full items-center gap-3 rounded-lg px-3 py-2 text-sm font-medium text-sidebar-foreground/60 hover:bg-sidebar-accent hover:text-sidebar-accent-foreground transition-colors"
-                >
-                  <item.icon className="h-4 w-4 shrink-0 text-sidebar-foreground/50" />
-                  <span className="text-sidebar-foreground/70">{item.label}</span>
-                </SidebarMenuButton>
-              </SidebarMenuItem>
-            ))}
-          </SidebarMenu>
-        </SidebarGroup>
       </SidebarContent>
 
-      {/* ── Footer / User Info ── */}
-      <SidebarFooter className="border-t border-sidebar-border px-4 py-4">
-        {isPending ? (
-          <div className="flex items-center gap-3">
-            <div className="h-9 w-9 rounded-full bg-sidebar-accent animate-pulse" />
-            <div className="flex-1 space-y-1.5">
-              <div className="h-3 w-24 rounded bg-sidebar-accent animate-pulse" />
-              <div className="h-2.5 w-32 rounded bg-sidebar-accent animate-pulse" />
-            </div>
-          </div>
-        ) : user ? (
-          <div className="space-y-3">
-            {/* User info */}
-            <div className="flex items-center gap-3">
-              {renderAvatar()}
-              <div className="flex-1 min-w-0">
-                <p className="truncate text-sm font-semibold text-sidebar-foreground leading-tight">
-                  {user.name}
-                </p>
-                <p className="truncate text-[11px] text-sidebar-foreground/50 leading-none mt-0.5">
-                  {user.email}
-                </p>
-              </div>
-            </div>
-            {/* Role badge */}
-            <span
-              className="inline-flex items-center rounded-full border border-sidebar-accent bg-sidebar-accent/10 px-2.5 py-0.5 text-[10px] font-semibold uppercase tracking-wider text-sidebar-accent-foreground"
-            >
-              {role}
-            </span>
-            {/* Sign out */}
-            <button
-              onClick={handleSignOut}
-              className="flex w-full items-center gap-2.5 rounded-lg px-3 py-2 text-sm font-medium text-sidebar-foreground/70 transition-colors hover:bg-sidebar-accent hover:text-sidebar-accent-foreground"
-            >
-              <LogOut className="h-4 w-4 shrink-0" />
-              <span>Sign Out</span>
-            </button>
-          </div>
-        ) : null}
+      {/* 5 & 6. BACK TO HOME and LOGOUT at bottom */}
+      <SidebarFooter className="flex flex-col gap-2 p-3">
+        {role === "seeker" && (
+          <Link
+            href="/dashboard/seekers/settings"
+            className="flex w-full items-center gap-2.5 rounded-md px-3 py-2 text-sm font-medium text-sidebar-foreground/70 bg-sidebar-accent/10 hover:bg-sidebar-accent/20 hover:text-sidebar-foreground transition-colors"
+          >
+            <Upload className="h-4 w-4 shrink-0" />
+            <span>Post Resume</span>
+          </Link>
+        )}
+        <Link
+          href="/"
+          className="flex w-full items-center gap-2.5 rounded-md px-3 py-2 text-sm font-medium text-sidebar-foreground/70 bg-sidebar-accent/10 hover:bg-sidebar-accent/20 hover:text-sidebar-foreground transition-colors"
+        >
+          <House className="h-4 w-4 shrink-0" />
+          <span>Back to Home</span>
+        </Link>
+        <button
+          onClick={handleLogout}
+          className="flex w-full items-center gap-2.5 rounded-md px-3 py-2 text-sm font-medium text-sidebar-foreground/70 bg-sidebar-accent/10 hover:bg-sidebar-accent/20 hover:text-sidebar-foreground transition-colors"
+        >
+          <LogOut className="h-4 w-4 shrink-0" />
+          <span>Logout</span>
+        </button>
       </SidebarFooter>
     </Sidebar>
   )

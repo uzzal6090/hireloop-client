@@ -30,6 +30,21 @@ export function Navbar() {
 
   const user = session?.user
 
+  const dashboardUrl = (() => {
+    if (!user) return null
+    const role = (user as { role?: string })?.role
+    switch (role) {
+      case "seeker":
+        return "/dashboard/seekers"
+      case "recruiter":
+        return "/dashboard/recruiter"
+      case "admin":
+        return "/dashboard/admin"
+      default:
+        return null
+    }
+  })()
+
   // Close dropdowns on route change
   React.useEffect(() => {
     setIsUserMenuOpen(false)
@@ -161,6 +176,14 @@ export function Navbar() {
                     {link.label}
                   </Link>
                 ))}
+                {dashboardUrl && (
+                  <Link
+                    href={dashboardUrl}
+                    className="inline-flex h-full items-center text-sm font-medium text-gray-300 transition-colors hover:text-white"
+                  >
+                    Dashboard
+                  </Link>
+                )}
               </div>
 
               <div className="mx-7 h-5 w-px shrink-0 bg-gray-600/70" />
@@ -315,6 +338,15 @@ export function Navbar() {
                   {link.label}
                 </Link>
               ))}
+              {dashboardUrl && (
+                <Link
+                  href={dashboardUrl}
+                  onClick={() => setIsOpen(false)}
+                  className="flex min-h-11 items-center rounded-lg px-3 text-sm font-medium text-gray-300 transition-colors hover:bg-white/10 hover:text-white"
+                >
+                  Dashboard
+                </Link>
+              )}
 
               <div className="my-2 h-px w-full bg-white/10" />
 
