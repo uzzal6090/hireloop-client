@@ -119,19 +119,21 @@ export default function ManageJobsPage() {
             {job.company} &middot; {job.category} &middot; {job.type}
           </p>
         </div>
-        <div className="w-24">
+        <div className="min-w-0 w-24">
           <StatusBadge status={displayStatus} />
         </div>
-        <div className="w-20 text-center">
-          <span className="text-xs font-medium text-white">
+        <div className="min-w-0 w-24 text-center overflow-hidden">
+          <span className="text-xs font-medium text-white truncate">
             {job.applicants}
           </span>
         </div>
-        <div className="w-20 text-center">
-          <span className="text-xs text-gray-400">{job.datePosted}</span>
+        <div className="min-w-0 w-24 text-center overflow-hidden">
+          <span className="text-xs text-gray-400 truncate">
+            {job.datePosted}
+          </span>
         </div>
         <div className="w-40 flex flex-col sm:flex-row gap-2 justify-end">
-          <Link href={`/dashboard/jobs/${job.id}/applicants`}>
+          <Link href="/dashboard/recruiter/applications">
             <button
               className="flex items-center gap-1.5 rounded-lg border border-white/10 px-3 py-2 text-xs font-medium text-gray-400 hover:bg-white/10 hover:text-white transition-all"
             >
@@ -231,16 +233,16 @@ export default function ManageJobsPage() {
           <span className="text-[11px] font-semibold uppercase tracking-widest text-gray-500">
             Job Title
           </span>
-          <span className="text-[11px] font-semibold uppercase tracking-widest text-gray-500 text-center w-24">
+          <span className="text-[11px] font-semibold uppercase tracking-widest text-gray-500 text-center min-w-0 w-24">
             Status
           </span>
-          <span className="text-[11px] font-semibold uppercase tracking-widest text-gray-500 text-center w-20">
+          <span className="text-[11px] font-semibold uppercase tracking-widest text-gray-500 text-center min-w-0 w-24">
             Applicants
           </span>
-          <span className="text-[11px] font-semibold uppercase tracking-widest text-gray-500 text-center w-20">
+          <span className="text-[11px] font-semibold uppercase tracking-widest text-gray-500 text-center min-w-0 w-24">
             Posted
           </span>
-          <span className="text-[11px] font-semibold uppercase tracking-widest text-gray-500 w-40 text-right">
+          <span className="text-[11px] font-semibold uppercase tracking-widest text-gray-500 min-w-0 w-40 text-right">
             Actions
           </span>
         </div>
