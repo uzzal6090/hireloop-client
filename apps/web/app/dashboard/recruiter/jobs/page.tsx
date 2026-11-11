@@ -1,6 +1,6 @@
 "use client"
 
-import { useState } from "react"
+import { useEffect, useState } from "react"
 import {
   FileText,
   ExternalLink,
@@ -9,78 +9,181 @@ import {
   CheckCircle2,
   Plus,
   ChevronRight,
+  RefreshCw,
 } from "lucide-react"
 import { SectionHeader, StatusBadge } from "../../components/ui"
 import Link from "next/link"
+
+type JobStatus = "draft" | "pending" | "published" | "closed" | "rejected"
+
+interface Job {
+  _id: string
+  title: string
+  slug: string
+  description: string
+  companyId: string
+  recruiterId: string
+  employmentType: string
+  workplaceType: string
+  location: string | null
+  salary: string | null
+  experienceLevel: string | null
+  skills: string[]
+  category: string | null
+  status: JobStatus
+  applicationDeadline: string | null
+  createdAt: string
+  updatedAt: string
+  companyName: string | null
+}
+
+interface JobsResponse {
+  success: true
+  jobs: Job[]
+  total: number
+  page: number
+  limit: number
+  totalPages: number
+}
 
 const statusColors: Record<string, string> = {
   Active: "bg-emerald-500/15 text-emerald-400 border-emerald-500/30",
   Closed: "bg-gray-500/15 text-gray-400 border-gray-500/30",
   Draft: "bg-yellow-500/15 text-yellow-400 border-yellow-500/30",
+  Pending: "bg-yellow-500/15 text-yellow-400 border-yellow-500/30",
+  Rejected: "bg-red-500/15 text-red-400 border-red-500/30",
 }
 
-const jobs = [
-  {
-    id: "1",
-    title: "Senior Frontend Developer",
-    company: "Acme Corp",
-    status: "Active" as const,
-    applicants: 42,
-    datePosted: "Nov 5, 2026",
-    category: "Engineering",
-    type: "Full-time",
-    salary: "$120-160K/yr",
-  },
-  {
-    id: "2",
-    title: "Product Designer",
-    company: "Acme Corp",
-    status: "Active" as const,
-    applicants: 28,
-    datePosted: "Oct 28, 2026",
-    category: "Design",
-    type: "Remote",
-    salary: "$100-140K/yr",
-  },
-  {
-    id: "3",
-    title: "DevOps Engineer",
-    company: "Acme Corp",
-    status: "Closed" as const,
-    applicants: 19,
-    datePosted: "Oct 15, 2026",
-    category: "DevOps",
-    type: "Full-time",
-    salary: "$110-150K/yr",
-  },
-  {
-    id: "4",
-    title: "Backend Engineer",
-    company: "Acme Corp",
-    status: "Draft" as const,
-    applicants: 0,
-    datePosted: "Nov 8, 2026",
-    category: "Engineering",
-    type: "Remote",
-    salary: "$90-130K/yr",
-  },
-]
+const displayStatus: Record<JobStatus, string> = {
+  draft: "Draft",
+  pending: "Pending",
+  published: "Active",
+  closed: "Closed",
+  rejected: "Rejected",
+}
+
+const badgeStatus: Record<JobStatus, string> = {
+  draft: "draft",
+  pending: "pending",
+  published: "active",
+  closed: "closed",
+  rejected: "rejected",
+}
+
+function formatDate(dateString: string | null): string {
+  if (!dateString) return "—"
+  try {
+    return new Date(dateString).toLocaleDateString(undefined, {
+      year: "numeric",
+      month: "short",
+      day: "numeric",
+    })
+  } catch {
+    return "—"
+  }
+}
 
 const activePlanLimit = 10
 
-export default function ManageJobsPage() {
-  const [deleteConfirmId, setDeleteConfirmId] = useState<string | null>(null)
-  const [closedJobs, setClosedJobs] = useState<Set<string>>(new Set())
+async function fetchJobs(): Promise<Job[]> {
+  const res = await fetch("/api/jobs?limit=100", { cache: "no-store" })
+  if (!res.ok) {
+    throw new Error("Failed to fetch jobs")
+  }
+  const data = (await res.json()) as JobsResponse
+  return data.jobs
+}
 
-  const handleToggleStatus = (id: string) => {
-    const job = jobs.find((j) => j.id === id)
-    if (!job) return
-    if (job.status === "Active") {
-      setClosedJobs((prev) => new Set([...prev, id]))
-    } else if (job.status === "Closed") {
-      setClosedJobs((prev) => {
+async function patchJobStatus(jobId: string, status: JobStatus): Promise<void> {
+  const res = await fetch(`/api/jobs/${jobId}`, {
+    method: "PATCH",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ status }),
+  })
+  if (!res.ok) {
+    let message = "Failed to update job status"
+    try {
+      const data = await res.json()
+      if (data.error) {
+        message = data.error
+      }
+    } catch {
+      // Use default message if body is not valid JSON
+    }
+    throw new Error(message)
+  }
+}
+
+async function deleteJobApi(jobId: string): Promise<void> {
+  const res = await fetch(`/api/jobs/${jobId}`, {
+    method: "DELETE",
+  })
+  if (!res.ok) {
+    throw new Error("Failed to delete job")
+  }
+}
+
+export default function ManageJobsPage() {
+  const [jobs, setJobs] = useState<Job[]>([])
+  const [loading, setLoading] = useState(true)
+  const [error, setError] = useState<string | null>(null)
+  const [deleteConfirmId, setDeleteConfirmId] = useState<string | null>(null)
+  const [isSubmitting, setIsSubmitting] = useState<Set<string>>(new Set())
+
+  useEffect(() => {
+    let cancelled = false
+
+    fetchJobs()
+      .then((data) => {
+        if (!cancelled) {
+          setJobs(data)
+          setLoading(false)
+        }
+      })
+      .catch(() => {
+        if (!cancelled) {
+          setError("Failed to load your jobs. Please try again.")
+          setLoading(false)
+        }
+      })
+
+    return () => {
+      cancelled = true
+    }
+  }, [])
+
+  const refreshJobs = async () => {
+    setLoading(true)
+    setError(null)
+    try {
+      const data = await fetchJobs()
+      setJobs(data)
+    } catch {
+      setError("Failed to load your jobs. Please try again.")
+    } finally {
+      setLoading(false)
+    }
+  }
+
+  const handleToggleStatus = async (job: Job) => {
+    const status = job.status as string
+    const isPublished = status === "published" || status === "active"
+    const targetStatus: JobStatus = isPublished ? "closed" : "published"
+
+    setIsSubmitting((prev) => new Set([...prev, job._id]))
+    try {
+      await patchJobStatus(job._id, targetStatus)
+      await refreshJobs()
+    } catch (err) {
+      setError(
+        err instanceof Error
+          ? err.message
+          : "Failed to update job status. Please try again."
+      )
+    } finally {
+      setIsSubmitting((prev) => {
         const next = new Set(prev)
-        next.delete(id)
+        next.delete(job._id)
         return next
       })
     }
@@ -90,44 +193,55 @@ export default function ManageJobsPage() {
     setDeleteConfirmId(id)
   }
 
-  const handleConfirmDelete = () => {
-    setDeleteConfirmId(null)
+  const handleConfirmDelete = async () => {
+    if (!deleteConfirmId) return
+    setIsSubmitting((prev) => new Set([...prev, deleteConfirmId]))
+    try {
+      await deleteJobApi(deleteConfirmId)
+      setDeleteConfirmId(null)
+      await refreshJobs()
+    } catch {
+      setError("Failed to delete job. Please try again.")
+    } finally {
+      setIsSubmitting((prev) => {
+        const next = new Set(prev)
+        next.delete(deleteConfirmId)
+        return next
+      })
+    }
   }
 
   const handleCancelDelete = () => {
     setDeleteConfirmId(null)
   }
 
-  const activeJobsCount = jobs.filter((j) => j.status === "Active").length
+  const activeJobsCount = jobs.filter((j) => (j.status as string) === "published" || (j.status as string) === "active").length
   const isAtLimit = activeJobsCount >= activePlanLimit
 
-  // Pre-compute job rows to avoid nested { } in JSX
   const jobRows = jobs.map((job) => {
-    const isClosed = closedJobs.has(job.id)
-    const displayStatus = isClosed ? "Closed" : job.status
+    const ds = displayStatus[job.status]
+    const isSubmittingJob = isSubmitting.has(job._id)
 
     return (
-      <tr key={job.id} className="hover:bg-white/5 transition-colors border-b border-white/10 last:border-0">
+      <tr key={job._id} className="hover:bg-white/5 transition-colors border-b border-white/10 last:border-0">
         <td className="px-5 py-4 text-left min-w-0">
           <div className="flex flex-col gap-1">
             <p className="text-sm font-semibold text-white leading-tight truncate">
               {job.title}
             </p>
             <p className="text-xs text-gray-400 truncate">
-              {job.company} &middot; {job.category} &middot; {job.type}
+              {job.companyName ?? "—"} &middot; {job.category ?? "—"} &middot; {job.employmentType}
             </p>
           </div>
         </td>
         <td className="px-5 py-4 text-center w-24">
-          <StatusBadge status={displayStatus} />
+          <StatusBadge status={(badgeStatus as Record<string, string>)[job.status] ?? "active"} />
         </td>
         <td className="px-5 py-4 text-center w-24 whitespace-nowrap overflow-hidden text-ellipsis">
-          <span className="text-xs font-medium text-white">
-            {job.applicants}
-          </span>
+          <span className="text-xs font-medium text-white">—</span>
         </td>
         <td className="px-5 py-4 text-center w-24 whitespace-nowrap overflow-hidden text-ellipsis">
-          <span className="text-xs text-gray-400">{job.datePosted}</span>
+          <span className="text-xs text-gray-400">{formatDate(job.createdAt)}</span>
         </td>
         <td className="px-5 py-4 text-right w-40">
           <div className="flex flex-col sm:flex-row gap-2 justify-end">
@@ -138,31 +252,43 @@ export default function ManageJobsPage() {
                 <ExternalLink className="h-3 w-3" /> Applicants
               </button>
             </Link>
-            {job.status === "Active" ? (
+            {(job.status as string) === "published" || (job.status as string) === "active" ? (
               <button
-                onClick={() => handleToggleStatus(job.id)}
-                className="flex items-center gap-1.5 rounded-lg border border-white/10 px-3 py-2 text-xs font-medium text-yellow-400 hover:bg-white/5 hover:text-yellow-400 transition-all"
+                onClick={() => handleToggleStatus(job)}
+                disabled={isSubmittingJob}
+                className={`flex items-center gap-1.5 rounded-lg border border-white/10 px-3 py-2 text-xs font-medium text-yellow-400 hover:bg-white/5 hover:text-yellow-400 transition-all ${
+                  isSubmittingJob ? "opacity-50 cursor-not-allowed" : ""
+                }`}
               >
                 <Clock className="h-3 w-3" /> Close
               </button>
-            ) : job.status === "Closed" ? (
+            ) : job.status === "closed" ? (
               <button
-                onClick={() => handleToggleStatus(job.id)}
-                className="flex items-center gap-1.5 rounded-lg border border-white/10 px-3 py-2 text-xs font-medium text-emerald-400 hover:bg-white/5 hover:text-emerald-400 transition-all"
+                onClick={() => handleToggleStatus(job)}
+                disabled={isSubmittingJob}
+                className={`flex items-center gap-1.5 rounded-lg border border-white/10 px-3 py-2 text-xs font-medium text-emerald-400 hover:bg-white/5 hover:text-emerald-400 transition-all ${
+                  isSubmittingJob ? "opacity-50 cursor-not-allowed" : ""
+                }`}
               >
                 <CheckCircle2 className="h-3 w-3" /> Reopen
               </button>
             ) : (
               <button
-                onClick={() => handleToggleStatus(job.id)}
-                className="flex items-center gap-1.5 rounded-lg border border-white/10 px-3 py-2 text-xs font-medium text-gray-400 hover:bg-white/5 hover:text-white transition-all"
+                onClick={() => handleToggleStatus(job)}
+                disabled={isSubmittingJob}
+                className={`flex items-center gap-1.5 rounded-lg border border-white/10 px-3 py-2 text-xs font-medium text-gray-400 hover:bg-white/5 hover:text-white transition-all ${
+                  isSubmittingJob ? "opacity-50 cursor-not-allowed" : ""
+                }`}
               >
                 Publish
               </button>
             )}
             <button
-              onClick={() => handleDelete(job.id)}
-              className="rounded-lg border border-white/10 p-2 text-gray-500 hover:border-red-500/40 hover:bg-red-500/10 hover:text-red-400 transition-all"
+              onClick={() => handleDelete(job._id)}
+              disabled={isSubmittingJob}
+              className={`rounded-lg border border-white/10 p-2 text-gray-500 hover:border-red-500/40 hover:bg-red-500/10 hover:text-red-400 transition-all ${
+                isSubmittingJob ? "opacity-50 cursor-not-allowed" : ""
+              }`}
             >
               <Trash2 className="h-3.5 w-3.5" />
             </button>
@@ -171,6 +297,56 @@ export default function ManageJobsPage() {
       </tr>
     )
   })
+
+  if (loading) {
+    return (
+      <div className="max-w-6xl mx-auto space-y-6">
+        <SectionHeader
+          title="Manage Jobs"
+          subtitle="View and manage all your job posts."
+          action={
+            <Link href="/dashboard/recruiter/jobs/new">
+              <button className="flex items-center gap-2 rounded-full px-6 py-2.5 text-sm font-semibold text-white shadow-lg transition-all bg-gradient-to-r from-indigo-600 via-purple-600 to-pink-600 hover:-translate-y-0.5 hover:shadow-purple-500/30">
+                <Plus className="h-4 w-4" /> Post New Job
+              </button>
+            </Link>
+          }
+        />
+        <div className="rounded-xl border border-white/10 bg-white/5 p-16 text-center space-y-4">
+          <RefreshCw className="mx-auto h-12 w-12 text-gray-600 animate-pulse" />
+          <p className="text-sm text-gray-400">Loading your jobs...</p>
+        </div>
+      </div>
+    )
+  }
+
+  if (error) {
+    return (
+      <div className="max-w-6xl mx-auto space-y-6">
+        <SectionHeader
+          title="Manage Jobs"
+          subtitle="View and manage all your job posts."
+          action={
+            <Link href="/dashboard/recruiter/jobs/new">
+              <button className="flex items-center gap-2 rounded-full px-6 py-2.5 text-sm font-semibold text-white shadow-lg transition-all bg-gradient-to-r from-indigo-600 via-purple-600 to-pink-600 hover:-translate-y-0.5 hover:shadow-purple-500/30">
+                <Plus className="h-4 w-4" /> Post New Job
+              </button>
+            </Link>
+          }
+        />
+        <div className="rounded-xl border border-white/10 bg-white/5 p-16 text-center space-y-4">
+          <RefreshCw className="mx-auto h-12 w-12 text-gray-600" />
+          <p className="text-sm text-red-400">{error}</p>
+          <button
+            onClick={refreshJobs}
+            className="rounded-full bg-gradient-to-r from-indigo-600 via-purple-600 to-pink-600 px-8 py-3 text-sm font-semibold text-white shadow-lg shadow-purple-500/20 transition-all hover:-translate-y-0.5"
+          >
+            Try Again
+          </button>
+        </div>
+      </div>
+    )
+  }
 
   return (
     <div className="max-w-6xl mx-auto space-y-6">
