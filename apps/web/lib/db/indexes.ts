@@ -3,6 +3,7 @@ import type { Collection } from "mongodb"
 
 export const COMPANIES_COLLECTION = "companies"
 export const JOBS_COLLECTION = "jobs"
+export const SAVED_JOBS_COLLECTION = "saved_jobs"
 
 let indexInitPromise: Promise<void> | null = null
 let indexInitialized = false
@@ -10,6 +11,7 @@ let indexInitialized = false
 async function runIndexInitialization(): Promise<void> {
   await ensureCompanyIndexes()
   await ensureJobIndexes()
+  await ensureSavedJobIndexes()
 }
 
 export async function ensureIndexesInitialized(): Promise<void> {
@@ -60,4 +62,12 @@ export async function ensureJobIndexes(): Promise<void> {
 export async function ensureAllIndexes(): Promise<void> {
   await ensureCompanyIndexes()
   await ensureJobIndexes()
+  await ensureSavedJobIndexes()
+}
+
+export async function ensureSavedJobIndexes(): Promise<void> {
+  const collection: Collection = db.collection(SAVED_JOBS_COLLECTION)
+
+  await collection.createIndex({ userId: 1, jobId: 1 }, { unique: true })
+  await collection.createIndex({ userId: 1, createdAt: -1 })
 }

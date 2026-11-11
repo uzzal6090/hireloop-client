@@ -19,7 +19,7 @@ const globalForMongo = globalThis as typeof globalThis & {
   mongoClient?: MongoClient
 }
 
-const client = globalForMongo.mongoClient ?? new MongoClient(uri)
+export const client = globalForMongo.mongoClient ?? new MongoClient(uri)
 
 if (process.env.NODE_ENV !== "production") {
   globalForMongo.mongoClient = client
@@ -45,6 +45,7 @@ export const auth = betterAuth({
       role: {
         type: ['seeker', 'recruiter', 'admin'],
         input: true,
+        output: true,
       },
     },
   },

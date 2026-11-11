@@ -125,12 +125,16 @@ export function validateEnum(
 export function validatePositiveNumber(
   value: unknown,
   fieldName: string
-): { success: true; value: number } | { success: false; errors: string[] } {
+): { success: true; value: number | null } | { success: false; errors: string[] } {
   const errors: string[] = []
+
+  if (value === null || value === undefined || value === "") {
+    return { success: true, value: null }
+  }
 
   const num = typeof value === "string" ? parseFloat(value) : value
 
-  if (typeof num !== "number" || isNaN(num) || num <= 0) {
+  if (typeof num !== "number" || !Number.isFinite(num) || num <= 0) {
     errors.push(`${fieldName} must be a positive number`)
     return { success: false, errors }
   }
