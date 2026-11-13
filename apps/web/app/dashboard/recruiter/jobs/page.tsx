@@ -1,6 +1,6 @@
 "use client"
 
-import { useEffect, useState } from "react"
+import { useCallback, useEffect, useRef, useState } from "react"
 import {
   FileText,
   ExternalLink,
@@ -13,6 +13,7 @@ import {
 } from "lucide-react"
 import { SectionHeader, StatusBadge } from "../../components/ui"
 import Link from "next/link"
+import { useSearchParams } from "next/navigation"
 
 type JobStatus = "draft" | "pending" | "published" | "closed" | "rejected"
 
@@ -129,6 +130,10 @@ export default function ManageJobsPage() {
   const [error, setError] = useState<string | null>(null)
   const [deleteConfirmId, setDeleteConfirmId] = useState<string | null>(null)
   const [isSubmitting, setIsSubmitting] = useState<Set<string>>(new Set())
+  const searchParams = useSearchParams()
+  const [statusFilter, setStatusFilter] = useState<JobStatus | "all">(
+    (searchParams.get("status") as JobStatus) || "all"
+  )
 
   useEffect(() => {
     let cancelled = false
@@ -136,7 +141,11 @@ export default function ManageJobsPage() {
     fetchJobs()
       .then((data) => {
         if (!cancelled) {
-          setJobs(data)
+          const filtered =
+            statusFilter === "all"
+              ? data
+              : data.filter((j) => j.status === statusFilter)
+          setJobs(filtered)
           setLoading(false)
         }
       })
@@ -150,7 +159,7 @@ export default function ManageJobsPage() {
     return () => {
       cancelled = true
     }
-  }, [])
+  }, [statusFilter])
 
   const refreshJobs = async () => {
     setLoading(true)

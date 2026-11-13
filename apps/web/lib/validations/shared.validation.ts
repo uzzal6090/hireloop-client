@@ -159,6 +159,24 @@ export function validateDate(
     return { success: false, errors }
   }
 
+  // JavaScript's Date constructor normalizes invalid calendar dates
+  // (e.g., "2026-02-30" becomes March 2). For ISO date strings,
+  // verify the parsed UTC components match the input exactly.
+  if (typeof value === "string") {
+    const input = value.trim()
+    if (/^\d{4}-\d{2}-\d{2}$/.test(input)) {
+      const [inputYear, inputMonth, inputDay] = input.split("-").map(Number)
+      if (
+        date.getUTCFullYear() !== inputYear ||
+        date.getUTCMonth() + 1 !== inputMonth ||
+        date.getUTCDate() !== inputDay
+      ) {
+        errors.push(`${fieldName} must be a valid date`)
+        return { success: false, errors }
+      }
+    }
+  }
+
   return { success: true, value: date }
 }
 

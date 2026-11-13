@@ -65,6 +65,8 @@ export default function JobDetailsPage() {
   const [applicationsLoaded, setApplicationsLoaded] = useState(false)
   const [applying, setApplying] = useState(false)
   const [appError, setAppError] = useState<string | null>(null)
+  const [savedJobIds, setSavedJobIds] = useState<Set<string>>(new Set())
+  const [isSaving, setIsSaving] = useState(false)
 
   const fetchJob = useCallback(async (abortSignal?: AbortSignal) => {
     if (!slug) return
@@ -155,6 +157,40 @@ export default function JobDetailsPage() {
     }
   }, [session, job])
 
+  useEffect(() => {
+    if (!session || !job) return
+
+    let cancelled = false
+
+    async function loadSavedJobs() {
+      try {
+        const res = await fetch("/api/seeker/saved-jobs", {
+          cache: "no-store",
+          headers: { "Content-Type": "application/json" },
+        })
+
+        if (!cancelled && res.ok) {
+          const data = await res.json().catch(() => null)
+          if (!cancelled && data?.success && Array.isArray(data.savedJobs)) {
+            const ids = new Set<string>()
+            for (const item of data.savedJobs as Array<{ jobId?: string }>) {
+              if (item?.jobId) ids.add(item.jobId)
+            }
+            setSavedJobIds(ids)
+          }
+        }
+      } catch {
+        // Non-fatal: saved state remains unknown until a save attempt.
+      }
+    }
+
+    loadSavedJobs()
+
+    return () => {
+      cancelled = true
+    }
+  }, [session, job])
+
   const isApplied = job ? appliedJobIds.has(job._id) : false
   const isAuthenticated = !!session
   const viewerRole = (session?.user as { role?: string })?.role ?? null
@@ -220,6 +256,51 @@ export default function JobDetailsPage() {
     }
   }
 
+  const handleSave = async () => {
+    if (!job || isSaving || !session) return
+
+    setIsSaving(true)
+
+    const wasSaved = savedJobIds.has(job._id)
+
+    try {
+      const res = await fetch(
+        wasSaved ? `/api/seeker/saved-jobs/${job._id}` : "/api/seeker/saved-jobs",
+        {
+          method: wasSaved ? "DELETE" : "POST",
+          headers: { "Content-Type": "application/json" },
+          ...(wasSaved ? {} : { body: JSON.stringify({ jobId: job._id }) }),
+        }
+      )
+
+      if (res.status === 401 || res.status === 403) {
+        toast({ title: "Sign in to save jobs.", type: "error" })
+        setIsSaving(false)
+        return
+      }
+
+      if (!res.ok) {
+        const data = await res.json().catch(() => null)
+        throw new Error(data?.error || "Failed to update saved job.")
+      }
+
+      setSavedJobIds((prev) => {
+        const next = new Set(prev)
+        if (wasSaved) next.delete(job._id)
+        else next.add(job._id)
+        return next
+      })
+      toast({
+        title: wasSaved ? "Job removed from saved jobs." : "Job saved successfully.",
+        type: "success",
+      })
+    } catch {
+      toast({ title: "Failed to update saved job. Please try again.", type: "error" })
+    } finally {
+      setIsSaving(false)
+    }
+  }
+
   if (loading) {
     return (
       <div className="max-w-6xl mx-auto space-y-8 px-6 lg:px-10 py-12">
@@ -271,11 +352,11 @@ export default function JobDetailsPage() {
       isJobOwner={isJobOwner}
       isApplied={isApplied}
       isApplying={applying}
-      isSaved={false}
-      isSaving={false}
+      isSaved={savedJobIds.has(job._id)}
+      isSaving={isSaving}
       appError={appError}
       onApply={handleApply}
-      onSave={undefined}
+      onSave={handleSave}
       onEdit={undefined}
       onManage={undefined}
     />
