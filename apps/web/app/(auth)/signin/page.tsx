@@ -1,6 +1,7 @@
 
 "use client"
 
+import { useToast } from "@workspace/ui/components/toast"
 import * as React from "react"
 import Link from "next/link"
 import Image from "next/image"
@@ -11,32 +12,74 @@ import { authClient } from "@/lib/auth-client"
 export default function SignIn() {
   const [passwordVisible, setPasswordVisible] = React.useState(false)
   const [loading, setLoading] = React.useState(false)
-  const [error, setError] = React.useState<string | null>(null)
+  const { toast, dismiss } = useToast()
   const router = useRouter()
 
   const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault()
-    setError(null)
+    dismiss()
+
+    const formData = new FormData(e.currentTarget)
+    const data = Object.fromEntries(formData.entries())
+
+    const email = (data.email as string)?.trim()
+    const password = (data.password as string)?.trim()
+
+    if (!email || !password) {
+      toast({
+        title: "Please enter your email and password.",
+        type: "error",
+        timeout: 3500,
+      })
+      return
+    }
+
     setLoading(true)
 
-    try {
-      const formData = new FormData(e.currentTarget)
-      const data = Object.fromEntries(formData.entries())
+    const response = await authClient.signIn.email({
+      email,
+      password,
+    })
 
-      await authClient.signIn.email({
-        email: data.email as string,
-        password: data.password as string,
-        callbackURL: "/",
+    if (response.error) {
+      setLoading(false)
+
+      const serverErr = response.error as { status?: number; code?: string; message?: string }
+
+      if (
+        serverErr.status === 401 ||
+        serverErr.status === 403 ||
+        serverErr.code === "INVALID_EMAIL_OR_PASSWORD"
+      ) {
+        toast({
+          title: "Incorrect email or password.",
+          description: "Please check your credentials and try again.",
+          type: "error",
+          timeout: 3500,
+        })
+        return
+      }
+
+      toast({
+        title: "Unable to sign in right now.",
+        description: "Please try again later.",
+        type: "error",
+        timeout: 3500,
       })
-
-      setLoading(false)
-      router.push("/")
-    } catch (err: unknown) {
-      setLoading(false)
-      const message =
-        err instanceof Error ? err.message : "Sign in failed. Please try again."
-      setError(message)
+      return
     }
+
+    toast({
+      title: "Login successful!",
+      description: "Welcome back! Redirecting you...",
+      type: "success",
+      timeout: 1800,
+    })
+
+    // Keep the success toast visible before navigating.
+    await new Promise((resolve) => setTimeout(resolve, 1500))
+
+    router.push("/")
   }
 
   return (
@@ -69,12 +112,6 @@ export default function SignIn() {
               Sign in to your account to continue
             </p>
           </div>
-
-          {error && (
-            <div className="mb-4 rounded-md border border-red-500/30 bg-red-500/10 px-3 py-2 text-[11px] text-red-400 text-center">
-              {error}
-            </div>
-          )}
 
           {/* Form */}
           <form onSubmit={handleSubmit} className="space-y-4">
