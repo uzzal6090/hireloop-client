@@ -381,29 +381,19 @@ export default function MyCompanyPage() {
               Quick Actions
             </h2>
             <div className="space-y-3">
-              <Link href="/dashboard/recruiter/jobs">
-                <Button
-                  variant="ghost"
-                  className="w-full flex items-center justify-between text-left px-4 py-3 text-sm font-medium text-gray-300 hover:bg-white/10 hover:text-white transition-all"
-                >
-                  <span className="flex items-center gap-2">
-                    <FileText className="h-4 w-4 text-indigo-400" />
-                    <span>Manage Jobs</span>
-                  </span>
-                  <span className="text-xs text-gray-500">View and manage all job posts</span>
-                </Button>
+              <Link
+                href="/dashboard/recruiter/jobs"
+                className="flex items-center gap-2 px-4 py-2.5 text-sm font-medium text-gray-300 hover:bg-white/10 hover:text-white rounded-lg transition-colors"
+              >
+                <FileText className="h-4 w-4 shrink-0 text-indigo-400" />
+                <span>Manage Jobs</span>
               </Link>
-              <Link href="/dashboard/recruiter/jobs/new">
-                <Button
-                  variant="ghost"
-                  className="w-full flex items-center justify-between text-left px-4 py-3 text-sm font-medium text-gray-300 hover:bg-white/10 hover:text-white transition-all"
-                >
-                  <span className="flex items-center gap-2">
-                    <Building2 className="h-4 w-4 text-purple-400" />
-                    <span>Post a New Job</span>
-                  </span>
-                  <span className="text-xs text-gray-500">Create a new job listing</span>
-                </Button>
+              <Link
+                href="/dashboard/recruiter/jobs/new"
+                className="flex items-center gap-2 px-4 py-2.5 text-sm font-medium text-gray-300 hover:bg-white/10 hover:text-white rounded-lg transition-colors"
+              >
+                <Building2 className="h-4 w-4 shrink-0 text-purple-400" />
+                <span>Post a New Job</span>
               </Link>
             </div>
           </div>
