@@ -4,6 +4,9 @@ import type { Collection } from "mongodb"
 export const COMPANIES_COLLECTION = "companies"
 export const JOBS_COLLECTION = "jobs"
 export const SAVED_JOBS_COLLECTION = "saved_jobs"
+export const APPLICATIONS_COLLECTION = "applications"
+export const RECRUITER_PROFILES_COLLECTION = "recruiter_profiles"
+export const SUBSCRIPTIONS_COLLECTION = "subscriptions"
 
 let indexInitPromise: Promise<void> | null = null
 let indexInitialized = false
@@ -12,6 +15,9 @@ async function runIndexInitialization(): Promise<void> {
   await ensureCompanyIndexes()
   await ensureJobIndexes()
   await ensureSavedJobIndexes()
+  await ensureApplicationIndexes()
+  await ensureRecruiterProfileIndexes()
+  await ensureSubscriptionIndexes()
 }
 
 export async function ensureIndexesInitialized(): Promise<void> {
@@ -63,6 +69,8 @@ export async function ensureAllIndexes(): Promise<void> {
   await ensureCompanyIndexes()
   await ensureJobIndexes()
   await ensureSavedJobIndexes()
+  await ensureApplicationIndexes()
+  await ensureRecruiterProfileIndexes()
 }
 
 export async function ensureSavedJobIndexes(): Promise<void> {
@@ -70,4 +78,24 @@ export async function ensureSavedJobIndexes(): Promise<void> {
 
   await collection.createIndex({ userId: 1, jobId: 1 }, { unique: true })
   await collection.createIndex({ userId: 1, createdAt: -1 })
+}
+
+export async function ensureApplicationIndexes(): Promise<void> {
+  const collection: Collection = db.collection(APPLICATIONS_COLLECTION)
+
+  await collection.createIndex({ seekerId: 1, jobId: 1 }, { unique: true })
+  await collection.createIndex({ seekerId: 1, createdAt: -1 })
+  await collection.createIndex({ jobId: 1, createdAt: -1 })
+}
+
+export async function ensureRecruiterProfileIndexes(): Promise<void> {
+  const collection: Collection = db.collection(RECRUITER_PROFILES_COLLECTION)
+
+  await collection.createIndex({ userId: 1 }, { unique: true })
+}
+
+export async function ensureSubscriptionIndexes(): Promise<void> {
+  const collection: Collection = db.collection(SUBSCRIPTIONS_COLLECTION)
+
+  await collection.createIndex({ userId: 1 }, { unique: true })
 }

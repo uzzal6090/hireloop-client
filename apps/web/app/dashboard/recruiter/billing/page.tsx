@@ -1,9 +1,26 @@
 "use client"
 
-import { useState } from "react"
-import { CreditCard, Zap, CheckCircle2, ArrowUpRight, Calendar, Hash, Link as LinkIcon } from "lucide-react"
+import { useEffect, useState } from "react"
+import { CreditCard, Zap, CheckCircle2, ArrowUpRight, Calendar, Hash, Link as LinkIcon, RefreshCw } from "lucide-react"
 import { SectionHeader, StatusBadge } from "../../components/ui"
 import Link from "next/link"
+import { useToast } from "@workspace/ui/components/toast"
+
+interface SubscriptionData {
+  subscription: {
+    id: string
+    userId: string
+    planId: string
+    planName: string
+    jobLimit: number
+    status: string
+  }
+  usage: {
+    activeJobs: number
+    jobLimit: number
+    remainingJobs: number
+  }
+}
 
 const plans = [
   {
@@ -15,13 +32,13 @@ const plans = [
       "Basic applicant management",
       "Standard listing visibility",
     ],
-    current: true,
     gradient: "from-gray-700 to-gray-800",
     jobLimit: 3,
+    available: true,
   },
   {
     name: "Growth",
-    price: "$49",
+    price: "—",
     period: "/month",
     features: [
       "Up to 10 active job posts",
@@ -29,14 +46,14 @@ const plans = [
       "Basic analytics",
       "Email support",
     ],
-    current: false,
     gradient: "from-indigo-600 to-purple-600",
     popular: true,
     jobLimit: 10,
+    available: false,
   },
   {
     name: "Enterprise",
-    price: "$149",
+    price: "—",
     period: "/month",
     features: [
       "Up to 50 active job posts",
@@ -46,39 +63,108 @@ const plans = [
       "Custom branding",
       "Priority support",
     ],
-    current: false,
     gradient: "from-purple-600 to-pink-600",
     jobLimit: 50,
+    available: false,
   },
 ]
 
-const paymentHistory = [
-  { id: "txn_001", date: "Nov 5, 2026", plan: "Growth", amount: "$49.00", status: "Paid" },
-  { id: "txn_002", date: "Oct 5, 2026", plan: "Growth", amount: "$49.00", status: "Paid" },
-  { id: "txn_003", date: "Sep 5, 2026", plan: "Free", amount: "$0.00", status: "Free" },
-]
-
-const company = {
-  name: "Acme Corp",
-  plan: "Growth" as const,
-  activeJobs: 7,
-  planLimit: 10,
-}
-
 export default function RecruiterBillingPage() {
-  const [saved, setSaved] = useState(false)
+  const { toast } = useToast()
+  const [data, setData] = useState<SubscriptionData | null>(null)
+  const [loading, setLoading] = useState(true)
+  const [error, setError] = useState<string | null>(null)
 
-  const handleUpgrade = (planName: string) => {
-    setSaved(true)
-    setTimeout(() => setSaved(false), 3000)
+  const fetchSubscription = async () => {
+    setLoading(true)
+    setError(null)
+    try {
+      const res = await fetch("/api/recruiter/subscription", { cache: "no-store" })
+      if (!res.ok) {
+        throw new Error("Failed to load subscription")
+      }
+      const json = await res.json()
+      if (!json.success) {
+        throw new Error(json.error || "Failed to load subscription")
+      }
+      setData(json as SubscriptionData)
+    } catch (err) {
+      const message = err instanceof Error ? err.message : "Failed to load subscription"
+      setError(message)
+      toast({
+        title: "Failed to load subscription",
+        description: message,
+        type: "error",
+        timeout: 3500,
+      })
+    } finally {
+      setLoading(false)
+    }
   }
+
+  useEffect(() => {
+    fetchSubscription()
+  }, [])
+
+  if (loading) {
+    return (
+      <div className="max-w-5xl mx-auto space-y-8">
+        <SectionHeader title="Subscription & Billing" subtitle="Manage your company's plan and payment history." />
+        <div className="rounded-xl border border-white/10 bg-white/5 p-16 text-center space-y-4">
+          <RefreshCw className="mx-auto h-12 w-12 text-gray-600 animate-pulse" />
+          <p className="text-sm text-gray-400">Loading subscription...</p>
+        </div>
+      </div>
+    )
+  }
+
+  if (error) {
+    return (
+      <div className="max-w-5xl mx-auto space-y-8">
+        <SectionHeader title="Subscription & Billing" subtitle="Manage your company's plan and payment history." />
+        <div className="rounded-xl border border-white/10 bg-white/5 p-16 text-center space-y-4">
+          <RefreshCw className="mx-auto h-12 w-12 text-red-400" />
+          <p className="text-sm text-red-400">{error}</p>
+          <button
+            onClick={fetchSubscription}
+            className="rounded-full bg-gradient-to-r from-indigo-600 via-purple-600 to-pink-600 px-8 py-3 text-sm font-semibold text-white shadow-lg shadow-purple-500/20 transition-all hover:-translate-y-0.5"
+          >
+            Try Again
+          </button>
+        </div>
+      </div>
+    )
+  }
+
+  if (!data) {
+    return (
+      <div className="max-w-5xl mx-auto space-y-8">
+        <SectionHeader title="Subscription & Billing" subtitle="Manage your company's plan and payment history." />
+        <div className="rounded-xl border border-white/10 bg-white/5 p-16 text-center space-y-4">
+          <p className="text-sm text-gray-400">No subscription data available.</p>
+        </div>
+      </div>
+    )
+  }
+
+  const planName = data.subscription.planName
+  const planId = data.subscription.planId
+  const jobLimit = data.subscription.jobLimit
+  const activeJobs = data.usage.activeJobs
+  const remainingJobs = data.usage.remainingJobs
+  const subscriptionStatus = data.subscription.status
+  const isAtLimit = remainingJobs <= 0
+
+  // Dynamically calculate progress percentage from live API data.
+  // Clamp between 0 and 100; guard against zero or invalid jobLimit.
+  const progressPercent =
+    jobLimit && jobLimit > 0
+      ? Math.min(100, Math.max(0, (activeJobs / jobLimit) * 100))
+      : 0
 
   return (
     <div className="max-w-5xl mx-auto space-y-8">
-      <SectionHeader
-        title="Subscription & Billing"
-        subtitle="Manage your company's plan and payment history."
-      />
+      <SectionHeader title="Subscription & Billing" subtitle="Manage your company's plan and payment history." />
 
       {/* Current plan summary */}
       <div className="rounded-xl border border-white/10 bg-white/5 p-5 flex flex-col sm:flex-row sm:items-center justify-between gap-4">
@@ -88,28 +174,74 @@ export default function RecruiterBillingPage() {
           </div>
           <div>
             <p className="text-sm font-semibold text-white">
-              Current plan: <span className="text-purple-400">{company.plan}</span>
+              Current plan: <span className="text-purple-400">{planName}</span>
             </p>
             <p className="text-xs text-gray-500">
-              {company.activeJobs} of {company.planLimit} active job posts used
+              Status: {subscriptionStatus.charAt(0).toUpperCase() + subscriptionStatus.slice(1)}
+            </p>
+            <p className="text-xs text-gray-500">
+              {activeJobs} of {jobLimit} active job posts used
             </p>
           </div>
         </div>
         <div className="flex-1 max-w-md sm:w-64">
           <div className="h-2 w-full rounded-full bg-white/10 overflow-hidden">
             <div
-              className={`h-full w-[${(company.activeJobs / company.planLimit) * 100}%] bg-gradient-to-r from-purple-500 to-pink-500 rounded-full`}
+              className={`h-full rounded-full transition-all duration-300 ${progressPercent >= 100 ? "bg-red-500" : "bg-gradient-to-r from-indigo-500 to-purple-500"}`}
+              style={{ width: `${progressPercent}%` }}
             />
           </div>
           <p className="text-[11px] text-gray-500 text-right mt-1">
-            {company.activeJobs} / {company.planLimit} used
+            {activeJobs} / {jobLimit} used
+          </p>
+          <p className="text-[11px] text-gray-500 text-right mt-0.5">
+            {progressPercent.toFixed(0)}%
           </p>
         </div>
-        <Link href="/dashboard/recruiter/jobs/new">
-          <button className="flex items-center gap-2 rounded-lg border border-white/10 bg-white/5 px-4 py-2.5 text-sm font-medium text-gray-300 hover:bg-white/10 hover:text-white transition-all">
-            <LinkIcon className="h-4 w-4" /> Post a Job
-          </button>
-        </Link>
+        <div className="flex items-center gap-2">
+          <span className={`text-xs font-semibold px-2 py-1 rounded ${
+            isAtLimit
+              ? "bg-red-500/20 text-red-400 border border-red-500/30"
+              : "bg-emerald-500/20 text-emerald-400 border border-emerald-500/30"
+          }`}>
+            {isAtLimit ? "Limit reached" : `${remainingJobs} slots remaining`}
+          </span>
+          <Link href="/dashboard/recruiter/jobs/new">
+            <button
+              disabled={isAtLimit}
+              className={`flex items-center gap-2 rounded-lg border border-white/10 px-4 py-2.5 text-sm font-medium transition-all ${
+                isAtLimit
+                  ? "bg-gray-600 cursor-not-allowed text-gray-500 border-gray-600 hover:shadow-none"
+                  : "bg-white/5 text-white hover:bg-white/10 hover:text-white"
+              }`}
+            >
+              <LinkIcon className="h-4 w-4" /> Post a Job
+            </button>
+          </Link>
+        </div>
+      </div>
+
+      {/* Current plan details */}
+      <div className="rounded-xl border border-white/10 bg-white/5 p-6">
+        <h2 className="text-base font-semibold text-white mb-4">Current Subscription</h2>
+        <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
+          <div className="rounded-lg border border-white/10 bg-white/5 p-4">
+            <p className="text-xs font-semibold uppercase tracking-wider text-gray-500 mb-2">Plan Name</p>
+            <p className="text-sm font-medium text-white">{planName}</p>
+          </div>
+          <div className="rounded-lg border border-white/10 bg-white/5 p-4">
+            <p className="text-xs font-semibold uppercase tracking-wider text-gray-500 mb-2">Job Limit</p>
+            <p className="text-sm font-medium text-white">{jobLimit} published jobs</p>
+          </div>
+          <div className="rounded-lg border border-white/10 bg-white/5 p-4">
+            <p className="text-xs font-semibold uppercase tracking-wider text-gray-500 mb-2">Status</p>
+            <p className={`text-sm font-medium ${
+              subscriptionStatus === "active" ? "text-emerald-400" : "text-red-400"
+            }`}>
+              {subscriptionStatus.charAt(0).toUpperCase() + subscriptionStatus.slice(1)}
+            </p>
+          </div>
+        </div>
       </div>
 
       {/* Plan cards */}
@@ -120,21 +252,26 @@ export default function RecruiterBillingPage() {
             <div
               key={plan.name}
               className={`relative rounded-xl border p-6 flex flex-col gap-5 transition-all ${
-                plan.current
+                plan.name === planId
                   ? "border-purple-500/50 bg-purple-500/5"
-                  : plan.popular
-                  ? "border-purple-500/30 bg-purple-500/5"
-                  : "border-white/10 bg-white/5 hover:border-white/20"
+                  : plan.available
+                  ? "border-white/10 bg-white/5 hover:border-white/20"
+                  : "border-white/10 bg-white/5 opacity-60"
               }`}
             >
-              {plan.popular && (
-                <span className="absolute -top-3 left-1/2 -translate-x-1/2 rounded-full bg-gradient-to-r from-indigo-600 to-purple-600 px-3 py-0.5 text-[11px] font-semibold text-white shadow-lg">
-                  Most Popular
+              {!plan.available && (
+                <span className="absolute -top-3 left-1/2 -translate-x-1/2 rounded-full bg-gray-600 px-3 py-0.5 text-[11px] font-semibold text-white shadow-lg">
+                  Coming Soon
                 </span>
               )}
-              {plan.current && (
+              {plan.name === planId && (
                 <span className="absolute -top-3 right-4 rounded-full border border-purple-500/40 bg-purple-500/15 px-3 py-0.5 text-[11px] font-semibold text-purple-400">
                   Current
+                </span>
+              )}
+              {plan.popular && plan.available && (
+                <span className="absolute -top-3 left-1/2 -translate-x-1/2 rounded-full bg-gradient-to-r from-indigo-600 to-purple-600 px-3 py-0.5 text-[11px] font-semibold text-white shadow-lg">
+                  Most Popular
                 </span>
               )}
 
@@ -155,14 +292,18 @@ export default function RecruiterBillingPage() {
                 ))}
               </ul>
 
-              {plan.current ? (
+              {!plan.available ? (
+                <button disabled className="w-full rounded-full border border-white/10 py-2.5 text-sm font-semibold text-gray-500 cursor-not-allowed">
+                  Coming Soon
+                </button>
+              ) : plan.name === planId ? (
                 <button disabled className="w-full rounded-full border border-white/10 py-2.5 text-sm font-semibold text-gray-500 cursor-not-allowed">
                   Current Plan
                 </button>
               ) : (
                 <button
-                  onClick={() => handleUpgrade(plan.name)}
-                  className={`w-full rounded-full bg-gradient-to-r ${plan.gradient} py-2.5 text-sm font-semibold text-white shadow-lg transition-all hover:-translate-y-0.5`}
+                  disabled
+                  className={`w-full rounded-full bg-gradient-to-r ${plan.gradient} py-2.5 text-sm font-semibold text-white shadow-lg transition-all hover:-translate-y-0.5 cursor-not-allowed`}
                 >
                   Upgrade to {plan.name}
                 </button>
@@ -170,62 +311,22 @@ export default function RecruiterBillingPage() {
             </div>
           ))}
         </div>
+        <p className="mt-4 text-xs text-gray-500">
+          Paid plan upgrades are not yet available. Payment processing will be activated in a future update.
+        </p>
       </div>
 
-      {/* Payment history */}
+      {/* Payment history - empty state */}
       <div>
         <h2 className="text-base font-semibold text-white mb-4">Payment History</h2>
-        <div className="rounded-xl border border-white/10 bg-white/5 overflow-x-auto">
-          <table className="min-w-full text-left border-collapse">
-            <thead>
-              <tr className="border-b border-white/10 bg-white/5">
-                <th className="px-5 py-3 font-semibold uppercase tracking-widest text-[11px] text-gray-500">Transaction ID</th>
-                <th className="px-5 py-3 text-center font-semibold uppercase tracking-widest text-[11px] text-gray-500 w-28">Date</th>
-                <th className="px-5 py-3 text-center font-semibold uppercase tracking-widest text-[11px] text-gray-500 w-20">Plan</th>
-                <th className="px-5 py-3 text-center font-semibold uppercase tracking-widest text-[11px] text-gray-500 w-20">Amount</th>
-                <th className="px-5 py-3 text-right font-semibold uppercase tracking-widest text-[11px] text-gray-500 w-20">Status</th>
-              </tr>
-            </thead>
-            <tbody className="divide-y divide-white/10">
-              {paymentHistory.map(tx => (
-                <tr key={tx.id} className="hover:bg-white/5 transition-colors border-b border-white/10 last:border-0">
-                  <td className="px-5 py-4 text-left min-w-0">
-                    <div className="flex items-center gap-2">
-                      <Hash className="h-3.5 w-3.5 text-gray-600" />
-                      <span className="font-mono text-xs text-gray-400 truncate">{tx.id}</span>
-                    </div>
-                  </td>
-                  <td className="px-5 py-4 text-center w-28 whitespace-nowrap overflow-hidden text-ellipsis">
-                    <div className="flex items-center gap-1 text-xs text-gray-400">
-                      <Calendar className="h-3 w-3 shrink-0" />
-                      {tx.date}
-                    </div>
-                  </td>
-                  <td className="px-5 py-4 text-center w-20 whitespace-nowrap overflow-hidden text-ellipsis">
-                    <StatusBadge status={tx.plan} />
-                  </td>
-                  <td className="px-5 py-4 text-center w-20 whitespace-nowrap overflow-hidden text-ellipsis">
-                    <span className="text-sm font-semibold text-white">{tx.amount}</span>
-                  </td>
-                  <td className="px-5 py-4 text-right w-20 whitespace-nowrap overflow-hidden text-ellipsis">
-                    <StatusBadge status={tx.status === "Paid" ? "offered" : "free"} />
-                  </td>
-                </tr>
-              ))}
-            </tbody>
-          </table>
+        <div className="rounded-xl border border-white/10 bg-white/5 p-12 text-center space-y-4">
+          <Hash className="mx-auto h-12 w-12 text-gray-600" />
+          <p className="text-sm font-medium text-white">No payment history available</p>
+          <p className="text-xs text-gray-500">
+            Payment processing has not been activated. Transaction history will appear here once you upgrade to a paid plan.
+          </p>
         </div>
       </div>
-
-      {saved && (
-        <div className="fixed bottom-6 right-6 rounded-xl border border-emerald-500/30 bg-emerald-500/10 px-4 py-3 flex items-center gap-2 shadow-xl">
-          <CheckCircle2 className="h-4 w-4 text-emerald-400" />
-          <span className="text-sm font-medium text-emerald-400">
-            Plan upgraded successfully!
-          </span>
-        </div>
-      )}
     </div>
   )
 }
-

@@ -1,7 +1,9 @@
 import { NextResponse } from "next/server"
 import { requireRole } from "@/lib/auth-server"
+import { db } from "@/lib/db"
 import { getJobById, updateJob, deleteJob } from "@/lib/repositories/job.repository"
 import { getCompanyById } from "@/lib/repositories/company.repository"
+import { ensureDefaultSubscription } from "@/lib/repositories/subscription.repository"
 import { validateUpdateJobInput } from "@/lib/validations/job.validation"
 
 const JOB_ID_REGEX = /^[0-9a-fA-F]{24}$/
@@ -142,6 +144,24 @@ export async function PATCH(
           "Forbidden: company must be approved before publishing a job",
           403
         )
+      }
+
+      // Enforce job limit: only count when transitioning from a non-published
+      // state. An already published job being updated does not consume an
+      // additional slot. Published jobs are counted across all companies owned
+      // by this recruiter.
+      if (existing.status !== "published") {
+        const subscription = await ensureDefaultSubscription(existing.recruiterId)
+        const publishedJobsCount = await db.collection("jobs").countDocuments({
+          recruiterId: existing.recruiterId,
+          status: "published",
+        })
+        if (publishedJobsCount >= subscription.jobLimit) {
+          return errorResponse(
+            `Job limit reached: you can publish at most ${subscription.jobLimit} jobs on your current plan.`,
+            403
+          )
+        }
       }
     }
 

@@ -59,6 +59,7 @@ const NAV_ITEMS: Record<Role, NavItem[]> = {
     { name: "Manage Jobs", url: "/dashboard/recruiter/jobs", icon: Briefcase },
     { name: "Applications", url: "/dashboard/recruiter/applications", icon: FileText },
     { name: "My Company", url: "/dashboard/recruiter/company", icon: Building2 },
+    { name: "Billing", url: "/dashboard/recruiter/billing", icon: CreditCard },
     { name: "Settings", url: "/dashboard/recruiter/settings", icon: Settings },
   ],
   admin: [
