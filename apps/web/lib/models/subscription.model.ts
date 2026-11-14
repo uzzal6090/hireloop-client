@@ -11,6 +11,13 @@ export interface Subscription {
   status: SubscriptionStatus
   createdAt: Date
   updatedAt: Date
+  stripeCustomerId?: string
+  stripeSubscriptionId?: string
+  stripePriceId?: string
+  paymentStatus?: string
+  currentPeriodStart?: Date
+  currentPeriodEnd?: Date
+  cancelAtPeriodEnd?: boolean
 }
 
 export interface CreateSubscriptionInput {
@@ -26,6 +33,13 @@ export interface UpdateSubscriptionInput {
   planName?: string
   jobLimit?: number
   status?: SubscriptionStatus
+  stripeCustomerId?: string
+  stripeSubscriptionId?: string
+  stripePriceId?: string
+  paymentStatus?: string
+  currentPeriodStart?: Date
+  currentPeriodEnd?: Date
+  cancelAtPeriodEnd?: boolean
 }
 
 export type SubscriptionDocument = Subscription & Record<string, unknown>
