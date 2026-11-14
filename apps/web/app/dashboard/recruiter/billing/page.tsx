@@ -5,6 +5,7 @@ import { CreditCard, Zap, CheckCircle2, ArrowUpRight, Calendar, Hash, Link as Li
 import { SectionHeader, StatusBadge } from "../../components/ui"
 import Link from "next/link"
 import { useToast } from "@workspace/ui/components/toast"
+import { useSearchParams } from "next/navigation"
 
 interface SubscriptionData {
   subscription: {
@@ -38,7 +39,7 @@ const plans = [
   },
   {
     name: "Growth",
-    price: "—",
+    price: "$10",
     period: "/month",
     features: [
       "Up to 10 active job posts",
@@ -49,7 +50,7 @@ const plans = [
     gradient: "from-indigo-600 to-purple-600",
     popular: true,
     jobLimit: 10,
-    available: false,
+    available: true,
   },
   {
     name: "Enterprise",
@@ -74,6 +75,13 @@ export default function RecruiterBillingPage() {
   const [data, setData] = useState<SubscriptionData | null>(null)
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
+  const [checkoutLoading, setCheckoutLoading] = useState(false)
+  const [checkoutError, setCheckoutError] = useState<string | null>(null)
+
+  const searchParams = useSearchParams()
+  const checkoutStatus = searchParams.get("status")
+  const checkoutCanceled = searchParams.get("canceled")
+  const sessionId = searchParams.get("session_id")
 
   const fetchSubscription = async () => {
     setLoading(true)
@@ -105,6 +113,37 @@ export default function RecruiterBillingPage() {
   useEffect(() => {
     fetchSubscription()
   }, [])
+
+  const handleUpgradeToGrowth = async () => {
+    setCheckoutLoading(true)
+    setCheckoutError(null)
+    try {
+      const res = await fetch("/api/recruiter/subscription/checkout", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+      })
+      if (!res.ok) {
+        const json = await res.json()
+        throw new Error(json.error || "Failed to create checkout session")
+      }
+      const { url } = await res.json()
+      if (!url) {
+        throw new Error("No checkout URL returned")
+      }
+      window.location.href = url
+    } catch (err) {
+      const message = err instanceof Error ? err.message : "Failed to start checkout"
+      setCheckoutError(message)
+      toast({
+        title: "Checkout failed",
+        description: message,
+        type: "error",
+        timeout: 3500,
+      })
+    } finally {
+      setCheckoutLoading(false)
+    }
+  }
 
   if (loading) {
     return (
@@ -244,6 +283,41 @@ export default function RecruiterBillingPage() {
         </div>
       </div>
 
+      {checkoutStatus === "success" && (
+        <div
+          className="rounded-xl border border-emerald-500/30 bg-emerald-500/10 p-4"
+        >
+          <h3 className="text-sm font-semibold text-emerald-400 mb-1">
+            Payment submitted — confirmation pending
+          </h3>
+          <p className="text-xs text-emerald-300">
+            Your Stripe Checkout session ({sessionId}) has been completed. Your
+            subscription will be activated once the payment is verified. Your
+            job limit remains at 3 until the paid plan is confirmed.
+          </p>
+        </div>
+      )}
+
+      {checkoutCanceled === "true" && (
+        <div className="rounded-xl border border-amber-500/30 bg-amber-500/10 p-4">
+          <h3 className="text-sm font-semibold text-amber-400 mb-1">
+            Checkout canceled
+          </h3>
+          <p className="text-xs text-amber-300">
+            Your upgrade was canceled. No changes were made to your subscription.
+          </p>
+        </div>
+      )}
+
+      {checkoutError && (
+        <div className="rounded-xl border border-red-500/30 bg-red-500/10 p-4">
+          <h3 className="text-sm font-semibold text-red-400 mb-1">
+            Checkout error
+          </h3>
+          <p className="text-xs text-red-300">{checkoutError}</p>
+        </div>
+      )}
+
       {/* Plan cards */}
       <div>
         <h2 className="text-base font-semibold text-white mb-4">Available Plans</h2>
@@ -302,17 +376,22 @@ export default function RecruiterBillingPage() {
                 </button>
               ) : (
                 <button
-                  disabled
-                  className={`w-full rounded-full bg-gradient-to-r ${plan.gradient} py-2.5 text-sm font-semibold text-white shadow-lg transition-all hover:-translate-y-0.5 cursor-not-allowed`}
+                  onClick={handleUpgradeToGrowth}
+                  disabled={checkoutLoading}
+                  className={`w-full rounded-full bg-gradient-to-r ${plan.gradient} py-2.5 text-sm font-semibold text-white shadow-lg transition-all hover:-translate-y-0.5 ${
+                    checkoutLoading ? "opacity-50 cursor-not-allowed" : ""
+                  }`}
                 >
-                  Upgrade to {plan.name}
+                  {checkoutLoading ? "Creating checkout..." : `Upgrade to ${plan.name}`}
                 </button>
               )}
             </div>
           ))}
         </div>
         <p className="mt-4 text-xs text-gray-500">
-          Paid plan upgrades are not yet available. Payment processing will be activated in a future update.
+          Paid plan upgrades are processed through Stripe Checkout. After
+          completing payment, your subscription will be activated once the
+          payment is confirmed.
         </p>
       </div>
 
