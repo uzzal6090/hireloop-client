@@ -150,15 +150,24 @@ export async function PATCH(
       // state. An already published job being updated does not consume an
       // additional slot. Published jobs are counted across all companies owned
       // by this recruiter.
+      //
+      // Effective entitlement: only active Growth subscriptions receive the
+      // Growth job limit. past_due/unpaid Growth subscriptions are capped at
+      // the Free limit (3). Existing published jobs are preserved; only new
+      // publishing is restricted.
       if (existing.status !== "published") {
         const subscription = await ensureDefaultSubscription(existing.recruiterId)
+        const effectiveJobLimit =
+          subscription.planId === "growth" && subscription.status === "active"
+            ? subscription.jobLimit
+            : 3
         const publishedJobsCount = await db.collection("jobs").countDocuments({
           recruiterId: existing.recruiterId,
           status: "published",
         })
-        if (publishedJobsCount >= subscription.jobLimit) {
+        if (publishedJobsCount >= effectiveJobLimit) {
           return errorResponse(
-            `Job limit reached: you can publish at most ${subscription.jobLimit} jobs on your current plan.`,
+            `Job limit reached: you can publish at most ${effectiveJobLimit} jobs on your current plan.`,
             403
           )
         }
